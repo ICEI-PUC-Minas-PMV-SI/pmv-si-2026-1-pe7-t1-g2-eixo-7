@@ -193,7 +193,8 @@ O presente projeto se alinha diretamente com o estado da arte levantado ao utili
 | dtir1 | Debt-to-Income Ratio. | 24.1K |
 # Canvas analítico
 
-<img width="1086" height="714" alt="image" src="https://github.com/user-attachments/assets/9b1f375c-d4e9-43aa-9621-489581c5c642" />
+<img width="2000" height="1414" alt="Software-Analtics-Canvas-v1 0 pdf" src="https://github.com/user-attachments/assets/6a330ec8-6648-4f30-a634-c4adf0214b11" />
+
 
 
 > **Links Úteis**:
