@@ -29,12 +29,9 @@ Experimentar e avaliar modelos de aprendizado de máquina capazes de prever a in
 ### Objetivos Específicos
 
 #### Objetivo específico 1:
-Realizar a análise exploratória e o pré-processamento do conjunto de dados, identificando padrões, inconsistências e possíveis fatores associados ao risco de inadimplência.
+Preparar e estruturar o dataset para análise e modelagem, realizando o tratamento de dados ausentes, inconsistências e variáveis necessárias para o treinamento dos modelos.
 
 #### Objetivo específico 2:
-Treinar e comparar diferentes modelos de aprendizado de máquina para classificação do risco de inadimplência, avaliando seu desempenho por meio de métricas apropriadas.
-
-#### Objetivo específico 3:
 Analisar quais variáveis do dataset possuem maior influência na previsão de inadimplência, contribuindo para uma melhor compreensão do problema de risco de crédito.
 
 ## Justificativa
