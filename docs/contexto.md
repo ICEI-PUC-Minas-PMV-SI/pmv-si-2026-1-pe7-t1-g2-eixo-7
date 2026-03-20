@@ -1,139 +1,201 @@
 # Introdução
 
-Texto descritivo introdutório apresentando a visão geral do projeto a ser desenvolvido considerando o contexto em que ele se insere, os objetivos gerais, a justificativa e o público-alvo do projeto.
+O acesso ao crédito é um dos principais mecanismos que impulsionam o desenvolvimento econômico, permitindo que indivíduos e empresas realizem investimentos, adquiram bens e financiem atividades produtivas. Instituições financeiras, como bancos e fintechs, desempenham um papel fundamental nesse processo ao oferecer empréstimos e outros produtos de crédito para diferentes perfis de clientes.
+
+Entretanto, a concessão de crédito envolve riscos, sendo a inadimplência um dos principais desafios enfrentados pelas instituições financeiras. A inadimplência ocorre quando um cliente não consegue cumprir suas obrigações de pagamento dentro do prazo estabelecido, gerando prejuízos financeiros e aumentando a incerteza no sistema de crédito.
 
 ## Problema
 
-Nesta seção, você deve apresentar o problema que a sua investigação/experimentação busca resolver. Por exemplo, caso o _dataset_ selecionado, seja um _dataset_ que contenha uma série temporal com o preço de diversas ações da bolsa de valores, o problema pode estar relacionado a dificuldade em saber a melhor hora (hora certa??) de comprar ou então, de executar a venda de uma determinada ação.
+A concessão de crédito exige que instituições financeiras avaliem cuidadosamente o risco associado a cada cliente. Decidir se um empréstimo deve ou não ser concedido envolve analisar diversos fatores, como renda, histórico de crédito, valor solicitado e outras características financeiras do solicitante.
 
-Descreva ainda o contexto em que essa aplicação será usada, se houver: empresa parceira, tecnologias etc. Novamente, descreva apenas o que de fato existir, pois ainda não é a hora de apresentar requisitos  detalhados ou projetos.
+Quando o risco de inadimplência não é identificado corretamente, podem ocorrer dois tipos de problema. No primeiro caso, a instituição concede crédito a clientes com alto risco de inadimplência, o que pode gerar perdas financeiras. No segundo caso, clientes com bom perfil financeiro podem ter seu crédito negado, reduzindo o acesso ao sistema financeiro.
 
-**Atenção:** Nesta etapa, apresente apenas informações reais e já confirmadas. Não antecipe requisitos técnicos detalhados, funcionalidades específicas ou desenhos de projeto — essa parte será desenvolvida posteriormente.
-
-> **Links Úteis**:
-> - [Objetivos, Problema de pesquisa e Justificativa](https://medium.com/@versioparole/objetivos-problema-de-pesquisa-e-justificativa-c98c8233b9c3)
-> - [Matriz Certezas, Suposições e Dúvidas](https://medium.com/educa%C3%A7%C3%A3o-fora-da-caixa/matriz-certezas-suposi%C3%A7%C3%B5es-e-d%C3%BAvidas-fa2263633655)
-> - [Brainstorming](https://www.euax.com.br/2018/09/brainstorming/)
+Neste projeto, o problema investigado consiste em identificar se é possível utilizar técnicas de aprendizado de máquina para prever a probabilidade de inadimplência em empréstimos com base em informações financeiras e demográficas dos clientes presentes em um dataset público. O estudo será realizado em um contexto experimental e acadêmico, utilizando ferramentas de análise de dados e modelagem de Machine Learning.
 
 ## Questão de pesquisa
 
-A questão de pesquisa é o ponto de partida e a base orientadora de todo o trabalho a ser desenvolvido. Ela deve estar diretamente alinhada ao problema identificado e expressar, de forma clara, o que se deseja investigar ou comprovar.
+Como técnicas de aprendizado de máquina podem ser utilizadas para prever a inadimplência em empréstimos financeiros a partir de dados demográficos e financeiros dos clientes?
 
-O papel da questão de pesquisa é guiar todas as etapas do projeto — desde a definição da metodologia até a análise e interpretação dos resultados. Ao término da investigação ou experimentação, o objetivo é que seja possível responder a essa questão de forma fundamentada, utilizando evidências obtidas ao longo do processo.
+Essa pergunta direciona a investigação realizada no projeto, buscando compreender se modelos de Machine Learning conseguem identificar padrões relevantes nos dados que permitam classificar clientes com maior risco de inadimplência.
 
-**Dica:** Formule a questão de pesquisa de forma específica e objetiva, evitando perguntas muito amplas ou genéricas. Pergunte-se: "Ao final do trabalho, minha pesquisa terá condições de responder claramente a essa pergunta?"
-
-> **Links Úteis**:
-> - [Questão de pesquisa](https://www.enago.com.br/academy/how-to-develop-good-research-question-types-examples/)
-> - [Problema de pesquisa](https://blog.even3.com.br/problema-de-pesquisa/)
+Ao final da pesquisa, espera-se que seja possível responder a essa questão por meio da análise do desempenho dos modelos desenvolvidos e das evidências obtidas durante os experimentos.
 
 ## Objetivos preliminares
 
-Nesta seção, você deve apresentar os objetivos preliminares do trabalho, deixando claro que o objetivo geral é experimentar modelos de aprendizado de máquina adequados para solucionar o problema descrito anteriormente.
+### Objetivo Geral
 
-Além do objetivo geral, é importante definir pelo menos dois objetivos específicos, que direcionem a investigação de acordo com o foco que o grupo pretende adotar. Esses objetivos específicos podem envolver: 
-* Explorar um determinado tipo de modelagem ou técnica de aprendizado de máquina;
-* Comparar diferentes abordagens para resolver o mesmo problema;
-* Aplicar o modelo em um cenário real ou simulado;
-* Otimizar parâmetros para melhorar métricas específicas de desempenho.
+Experimentar e avaliar modelos de aprendizado de máquina capazes de prever a inadimplência em empréstimos financeiros utilizando dados históricos de clientes.
 
-Exemplo:
-Objetivo específico 1: Predizer a tendência de alta, estabilidade ou queda de uma determinada ação em uma janela de tempo definida.
-Objetivo específico 2: Estimar o valor exato da ação ao final do período analisado.
+### Objetivos Específicos
 
-**Importante:** À medida que a pesquisa/experimentação avança, os objetivos podem ser ajustados ou refinados. Mantenha essa seção atualizada no repositório para refletir o andamento e as novas decisões do projeto.
- 
-> **Links Úteis**:
-> - [Objetivo geral e objetivo específico: como fazer e quais verbos utilizar](https://blog.mettzer.com/diferenca-entre-objetivo-geral-e-objetivo-especifico/)
+#### Objetivo específico 1:
+Preparar e estruturar o dataset para análise e modelagem, realizando o tratamento de dados ausentes, inconsistências e variáveis necessárias para o treinamento dos modelos.
+
+#### Objetivo específico 2:
+Analisar quais variáveis do dataset possuem maior influência na previsão de inadimplência, contribuindo para uma melhor compreensão do problema de risco de crédito.
 
 ## Justificativa
 
-Nesta seção, apresente a importância e a motivação para trabalhar com o conjunto de dados escolhido. Explique por que esse dataset é relevante e como ele se conecta ao problema identificado anteriormente.
+A inadimplência representa um dos principais desafios enfrentados pelo setor financeiro. De acordo com dados do Banco Central do Brasil, o nível de inadimplência no sistema financeiro pode impactar diretamente a estabilidade do mercado de crédito, afetando tanto instituições financeiras quanto consumidores.
 
-Indique:
-* Razões para a escolha dos objetivos específicos – Justifique por que decidiu aprofundar sua investigação nessas metas, relacionando-as ao potencial de solução ou melhoria para o problema.
-* Relevância do estudo do problema – Mostre a importância de compreender e tratar a questão apresentada, tanto no contexto acadêmico quanto no profissional.
-* Impacto social, econômico ou ambiental – Descreva como o problema afeta a sociedade ou um setor específico, buscando sempre quantificar o impacto por meio de dados reais.
+Quando níveis elevados de inadimplência ocorrem, os bancos tendem a aumentar as taxas de juros ou restringir a concessão de crédito, o que pode dificultar o acesso ao financiamento para consumidores e empresas. Dessa forma, melhorar a capacidade de prever o risco de inadimplência pode contribuir para decisões de crédito mais eficientes e equilibradas.
 
-**Importante:**
-* Apresente números, estatísticas e informações concretas, citando as fontes (relatórios, artigos científicos, portais oficiais etc.).
-* Mantenha a objetividade e a clareza, evitando argumentos genéricos.
-* Construa um texto coeso que conecte o problema, os objetivos e a relevância do trabalho.
+O uso de técnicas de aprendizado de máquina tem se mostrado uma abordagem promissora nesse contexto, pois permite identificar padrões complexos em grandes volumes de dados que seriam difíceis de detectar por métodos tradicionais de análise estatística. Esses modelos podem apoiar o processo de análise de crédito, reduzindo riscos financeiros e aumentando a eficiência na concessão de empréstimos.
 
-> **Links Úteis**:
-> - [Como montar a justificativa](https://guiadamonografia.com.br/como-montar-justificativa-do-tcc/)
+O dataset escolhido para este projeto contém diversas informações relevantes sobre solicitantes de empréstimos, como características demográficas, financeiras e histórico de crédito. Esse conjunto de dados permite investigar como diferentes variáveis podem influenciar a probabilidade de inadimplência e avaliar a eficácia de diferentes algoritmos de aprendizado de máquina na solução desse problema.
 
 ## Público-Alvo
 
-Nesta seção, descreva quem poderá se beneficiar com a sua investigação, apresentando os diferentes perfis de pessoas ou grupos impactados.
+O público-alvo deste projeto inclui instituições financeiras, como bancos, fintechs e cooperativas de crédito, que realizam processos de análise e concessão de empréstimos. Os resultados do estudo podem contribuir para a melhoria da avaliação de risco de crédito, auxiliando na identificação de clientes com maior probabilidade de inadimplência.
 
-O objetivo aqui não é definir clientes específicos ou papéis exatos dentro da aplicação, mas sim compreender o perfil dos usuários e partes interessadas. Para isso, considere:
-* Conhecimentos prévios relacionados ao domínio do problema e ao uso de tecnologia;
-* Nível de familiaridade com recursos digitais e possíveis barreiras de uso;
-* Contexto profissional e hierárquico, quando aplicável (ex.: nível de decisão, responsabilidades, área de atuação);
-* Necessidades e expectativas que podem ser atendidas pelo projeto.
+Além disso, o projeto também se destina a profissionais da área financeira, como analistas de crédito e gestores de risco, bem como pesquisadores e estudantes das áreas de ciência de dados, administração, economia e sistemas de informação, interessados na aplicação de técnicas de aprendizado de máquina na análise de dados financeiros.
 
-**Dica:** Seja objetivo e baseie suas descrições em informações reais ou plausíveis para o contexto escolhido. Isso ajudará a manter o foco no desenvolvimento de soluções relevantes e aplicáveis.
+# Estado da Arte
 
-> **Links Úteis**:
-> - [Público-alvo](https://blog.hotmart.com/pt-br/publico-alvo/)
-> - [Como definir o público alvo](https://exame.com/pme/5-dicas-essenciais-para-definir-o-publico-alvo-do-seu-negocio/)
-> - [Público-alvo: o que é, tipos, como definir seu público e exemplos](https://klickpages.com.br/blog/publico-alvo-o-que-e/)
-> - [Qual a diferença entre público-alvo e persona?](https://rockcontent.com/blog/diferenca-publico-alvo-e-persona/)
+A predição de inadimplência em operações de crédito é um dos problemas mais relevantes do setor financeiro, com impacto direto na lucratividade das instituições, na concessão de crédito justo e na estabilidade econômica. A crescente disponibilidade de dados de solicitantes de empréstimo, aliada ao avanço de algoritmos de aprendizado de máquina, tem impulsionado pesquisas que buscam modelos preditivos mais precisos, interpretativos e robustos do que os sistemas tradicionais baseados em regras.
 
-## Estado da arte
+Esta seção documenta cinco trabalhos da literatura recente que tratam de problemas semelhantes ao proposto neste projeto, registrando para cada um: o problema e contexto, os dados utilizados, as abordagens e algoritmos empregados, as métricas de avaliação, os principais resultados obtidos e a correlação direta com o presente trabalho. Ao final, uma síntese crítica discute convergências, divergências, lacunas identificadas e o alinhamento com o projeto em desenvolvimento.
 
-Nesta seção, descreva abordagens da literatura que tratam problemas semelhantes ao seu. Seu objetivo é documentar métodos, dados, métricas e resultados.
+---
 
-### O que levantar (mínimo 5 trabalhos)
-Para **cada estudo encontrado** aderente à temática do grupo, registre de forma objetiva:
-* Problema e contexto: que problema o trabalho buscou resolver e em qual domínio/cenário foi aplicado.
-* Dados (dataset): origem, tamanho, período, variáveis/atributos, pré-processamentos relevantes (faltantes, balanceamento, normalização).
-* Abordagem/algoritmos: algoritmos utilizados e parâmetros principais (quando informados).
-* Métricas de avaliação: quais e por quê (ex.: Acurácia, F1, AUC, RMSE, MAE, etc.).
-* Resultados: principais números, comparações internas, limitações citadas e conclusões.
+## Estudos Levantados
 
-* Texto-síntese crítico (2–4 parágrafos) respondendo:
-- O que os estudos concordam? Onde divergem?
-- Quais lacunas permanecem (dados, métricas, cenários, limitações técnicas/éticas)?
-- Como seu projeto se alinha aos estudos identificados?
+### Estudo 1 — Akinjole et al. (2024)
 
-**Dica:** Prefira artigos dos últimos 5 anos ou referências clássicas indispensáveis.
+AKINJOLE, A. et al. Ensemble-Based Machine Learning Algorithm for Loan Default Risk Prediction. *Mathematics*, v. 12, n. 21, p. 3423, out. 2024. DOI: 10.3390/math12213423.
 
-### Ferramentas inteligentes permitidas
-Você pode utilizar: Perplexity, SciSpace, Elicit, Research Rabbit, Litmaps.
-Use-as para descoberta, organização e triagem de literatura. 
+| Campo | Descrição |
+|---|---|
+| **Problema e Contexto** | Predição de risco de inadimplência em empréstimos pessoais concedidos por plataformas P2P (peer-to-peer lending). O desafio central é identificar, dentre solicitantes com múltiplos atributos, aqueles com maior probabilidade de não honrar o compromisso financeiro, reduzindo perdas para credores. |
+| **Dados (Dataset)** | Dados da plataforma LendingClub (EUA), período 2007–2015, com forte desequilíbrio de classes. Técnicas testadas: ROS, RUS, SMOTE, ADASYN, Tomek Links, SMOTE-Tomek e SMOTE+ENN. |
+| **Abordagem / Algoritmos** | Comparação entre Random Forest, Decision Tree, SVM, XGBoost, ADABoost e MLP. Ensemble proposto: XGBoost + ADABoost. |
+| **Métricas de Avaliação** | Acurácia, Precisão, Recall e AUC-ROC (com ênfase em Recall). |
+| **Resultados** | Ensemble superou modelos individuais; SMOTE+ENN apresentou melhor desempenho geral. **Limitação:** restrição ao contexto P2P norte-americano. |
+| **🔗 Relação com o Presente Trabalho** | **Semelhanças:** o problema central — predição de inadimplência com desequilíbrio de classes — é diretamente equivalente ao deste projeto. Os algoritmos de ensemble (XGBoost, Random Forest, ADABoost), as técnicas de balanceamento (SMOTE e variantes) e as métricas priorizadas (AUC-ROC, Recall, F1-score) são os mesmos. **Diferenças:** Akinjole et al. utilizam o dataset LendingClub (EUA, contexto P2P), enquanto o presente projeto utiliza o Loan Default Dataset do Kaggle (148.670 registros, 34 atributos), com escopo demográfico e financeiro mais amplo. O presente trabalho também inclui etapa explícita de interpretabilidade (SHAP/LIME), não abordada por Akinjole et al. |
 
-**Atenção:** 
-* Sempre acesse a fonte original (PDF/artigo) antes de citar; verifique números e conclusões.
-* Registre DOI/URL oficial e dados bibliográficos completos.
-* Evite “alucinações” das ferramentas: desconfie de referências sem DOI ou que você não consiga localizar oficialmente.
-* Use as ferramentas inteligentes para mapear redes de citação (Research Rabbit), mapas de tópicos (Litmaps), filtrar por período e gerar resumos iniciais (Perplexity/SciSpace/Elicit).
-* Leia os trabalhos mais promissores e descarte estudos fora de escopo.
+---
 
-> **Links Úteis**:
-> - [Google Scholar](https://scholar.google.com/)
-> - [IEEE Xplore](https://ieeexplore.ieee.org/Xplore/home.jsp)
-> - [Science Direct](https://www.sciencedirect.com/)
-> - [ACM Digital Library](https://dl.acm.org/)
+### Estudo 2 — Lin et al. (2022)
+
+LIN, C.; QIAO, N.; ZHANG, W.; LI, Y.; MA, S. Default risk prediction and feature extraction using a penalized deep neural network. *Statistics and Computing*, v. 32, n. 76, set. 2022. DOI: 10.1007/s11222-022-10140-z.
+
+| Campo | Descrição |
+|---|---|
+| **Problema e Contexto** | Predição de inadimplência com modelagem temporal via análise de sobrevivência. |
+| **Dados (Dataset)** | LendingClub, com tratamento de censura à direita e treinamento em larga escala via minibatch gradient descent. |
+| **Abordagem / Algoritmos** | Rede neural profunda penalizada com L1, comparada a modelos de sobrevivência clássicos (Cox com Lasso). |
+| **Métricas de Avaliação** | C-statistic, erro de Brier e calibração. |
+| **Resultados** | Melhor desempenho e seleção automática de atributos. **Limitação:** baixa interpretabilidade e ausência de avaliação em cenários adversos. |
+| **🔗 Relação com o Presente Trabalho** | **Semelhanças:** ambos os trabalhos lidam com predição de inadimplência em empréstimos e buscam identificar atributos relevantes para o default. A preocupação com seleção de atributos (via penalização L1 em Lin et al., e via importância de features e SHAP neste projeto) é um ponto de convergência metodológica. **Diferenças:** Lin et al. enquadram o problema como análise de sobrevivência (estimando probabilidade de default ao longo do tempo), enquanto o presente projeto trata o problema como classificação binária supervisionada — abordagem mais alinhada às práticas operacionais de concessão de crédito. O dataset utilizado (Loan Default Dataset, Kaggle, 148.670 registros) não possui estrutura temporal de censura. A interpretabilidade, ponto cego em Lin et al., é um objetivo explícito deste projeto. |
+
+---
+
+### Estudo 3 — Zhang et al. (2025)
+
+ZHANG, X.; ZHANG, T.; HOU, L.; LIU, X.; GUO, Z.; TIAN, Y.; LIU, Y. Data-Driven Loan Default Prediction: A Machine Learning Approach for Enhancing Business Process Management. *Systems*, v. 13, n. 7, p. 581, jul. 2025. DOI: 10.3390/systems13070581.
+
+| Campo | Descrição |
+|---|---|
+| **Problema e Contexto** | Uso de ML para melhorar processos de concessão de crédito e reduzir empréstimos não performados (NPLs). |
+| **Dados (Dataset)** | Dataset sintético derivado do Credit Risk Dataset do Kaggle (`taweilo/loan-approval-classification-data`), enriquecido com variáveis adicionais. Atributos incluem renda, score de crédito, taxa de juros, finalidade do empréstimo e histórico de inadimplência. |
+| **Abordagem / Algoritmos** | Pipeline completo com SMOTE, engenharia de atributos e tuning via GridSearchCV com validação cruzada 5-fold. Modelos: XGBoost, Gradient Boosting, Random Forest e LightGBM. |
+| **Métricas de Avaliação** | Acurácia, F1-score, ROC AUC e matriz de confusão. |
+| **Resultados** | Gradient Boosting com melhor desempenho geral (acurácia = 0,8887, F1 = 0,8084, Recall = 0,8021). **Limitação:** natureza black-box e sensibilidade ao desbalanceamento. |
+| **🔗 Relação com o Presente Trabalho** | **Semelhanças:** o pipeline adotado — pré-processamento, engenharia de atributos, SMOTE, tuning via validação cruzada e comparação entre XGBoost, Gradient Boosting e Random Forest — é estruturalmente equivalente ao deste projeto. As métricas (F1-score, ROC AUC, Recall, matriz de confusão) são as mesmas. Ambos reconhecem a natureza black-box como limitação regulatória. **Diferenças:** Zhang et al. utilizam um dataset sintético derivado do Kaggle (`taweilo/loan-approval-classification-data`), com conjunto de variáveis mais enxuto, enquanto o presente projeto utiliza o Loan Default Dataset (148.670 registros, 34 atributos), com maior volume e cobertura de variáveis demográficas e financeiras. Este projeto também incorpora explicitamente ferramentas de XAI (SHAP/LIME), lacuna identificada por Zhang et al. como trabalho futuro. |
+
+---
+
+### Estudo 4 — Jin, Wu e Zhao (2022)
+
+JIN, L.; WU, Z.; ZHAO, J. Prediction of Credit Card Defaulters Based on SMOTE-XGBoost Model. In: *WHICEB 2022 Proceedings*, 2022. Disponível em: https://aisel.aisnet.org/whiceb2022/64/.
+
+| Campo | Descrição |
+|---|---|
+| **Problema e Contexto** | Inadimplência em cartões de crédito, com foco na superação das limitações de algoritmos tradicionais frente ao forte desequilíbrio de classes. |
+| **Dados (Dataset)** | Dataset UCI Machine Learning Repository (Taiwan), 30.000 registros, com atributos demográficos e histórico de pagamentos. |
+| **Abordagem / Algoritmos** | SMOTE + XGBoost, validado por 10-fold cross-validation. Comparado com XGBoost sem SMOTE e com Random Forest. |
+| **Métricas de Avaliação** | Recall, Acurácia e AUC. |
+| **Resultados** | SMOTE melhora significativamente o Recall. **Limitação:** domínio específico (cartão de crédito taiwanês) e ausência de validação externa. |
+| **🔗 Relação com o Presente Trabalho** | **Semelhanças:** a combinação SMOTE + XGBoost é um dos pilares metodológicos deste projeto, e a conclusão de Jin et al. — de que o SMOTE é essencial para melhorar o Recall sobre a classe minoritária — corrobora diretamente as escolhas técnicas aqui feitas. As métricas (Recall, AUC, Acurácia) e o uso de validação cruzada são os mesmos. **Diferenças:** Jin et al. trabalham com inadimplência em cartão de crédito (domínio e dinâmica distintos dos empréstimos pessoais), com apenas 30.000 registros (UCI, Taiwan). O presente projeto utiliza o Loan Default Dataset (148.670 registros, 34 atributos), com maior volume e cobertura de variáveis. Jin et al. também não abordam interpretabilidade, lacuna que este projeto busca suprir. |
+
+---
+
+### Estudo 5 — Abbas, Ying e Ayoubi (2026)
+
+ABBAS, G.; YING, Z.; AYOUBI, M. Consensus-driven feature selection for transparent and robust loan default prediction. *Scientific Reports*, v. 16, n. 1496, jan. 2026. DOI: 10.1038/s41598-025-31468-2.
+
+| Campo | Descrição |
+|---|---|
+| **Problema e Contexto** | Predição de inadimplência com foco em interpretabilidade e seleção de atributos para conformidade regulatória. |
+| **Dados (Dataset)** | Datasets de crédito de alta dimensionalidade com desequilíbrio de classes. SMOTE aplicado exclusivamente ao treino para evitar data leakage. |
+| **Abordagem / Algoritmos** | Framework HRA-FS (Hybrid Rank-Aggregated Feature Selection) combinando ReliefF, RFE e ElasticNet via Borda count. XGBoost como classificador base. |
+| **Métricas de Avaliação** | Acurácia, Precisão, Recall e F1-score, com avaliação qualitativa de interpretabilidade. |
+| **Resultados** | Melhor desempenho e redução de redundância de features. **Limitação:** alta complexidade computacional e ausência de validação externa. |
+| **🔗 Relação com o Presente Trabalho** | **Semelhanças:** este é o estudo com maior proximidade temática ao presente projeto. Ambos tratam predição de inadimplência em empréstimos, utilizam XGBoost como classificador central, aplicam SMOTE apenas ao treino (evitando data leakage), adotam as mesmas métricas (Recall, F1-score) e compartilham explicitamente a preocupação com XAI e conformidade regulatória. **Diferenças:** Abbas et al. propõem um novo framework de seleção de features (HRA-FS) como contribuição central, enquanto este projeto foca na comparação sistemática de modelos de ensemble com interpretabilidade via SHAP/LIME. O dataset utilizado por Abbas et al. não é o mesmo — o presente projeto utiliza o Loan Default Dataset (Kaggle, 148.670 registros, 34 atributos documentados). Adicionalmente, este projeto avalia questões de fairness e viés demográfico, ponto não coberto por Abbas et al. |
+
+---
+
+## Síntese Crítica
+
+**Convergências entre os estudos.**
+Há consenso quanto à superioridade de métodos de ensemble (especialmente XGBoost e Gradient Boosting) sobre modelos mais simples como regressão logística e árvores de decisão individuais, resultado observado em diferentes contextos (P2P lending, cartões de crédito, empréstimos bancários). Todos os estudos reconhecem o desequilíbrio de classes como o principal desafio metodológico, com SMOTE como técnica predominante para mitigá-lo. Métricas como AUC-ROC, F1-score e Recall são consistentemente priorizadas sobre acurácia pura.
+
+**Divergências e nuances.**
+A principal variação está na formulação do problema: Lin et al. (2022) adotam análise de sobrevivência em vez de classificação binária, adicionando riqueza preditiva mas também complexidade metodológica. Questões de interpretabilidade são tratadas de forma desigual — Jin et al. (2022) não a discutem, enquanto Abbas et al. (2026) e Zhang et al. (2025) a reconhecem explicitamente como limitação regulatória e apontam para a necessidade de frameworks como SHAP ou LIME.
+
+**Lacunas identificadas.**
+Destacam-se a ausência de datasets de mercados diversos (especialmente fora de EUA e Ásia), pouca exploração de fairness e viés demográfico, e ausência de análise de *concept drift* ao longo do tempo, o que limita a aplicabilidade prática dos modelos em produção.
+
+**Alinhamento com o projeto.**
+O presente projeto utiliza o Loan Default Dataset (Kaggle, 148.670 registros, 34 atributos), com volume superior ao dataset UCI de Jin et al. (30.000 registros) e cobertura de variáveis mais ampla do que o dataset sintético de Zhang et al. A metodologia — baseada em ensembles, SMOTE e métricas robustas — está alinhada à literatura consolidada nos cinco estudos analisados. Como diferencial, o projeto incorpora análise de interpretabilidade (SHAP/LIME) e considera aspectos de fairness e viés demográfico, contribuindo para suprir lacunas identificadas no estado da arte.
 
 # Descrição do _dataset_ selecionado
 
-Nesta seção, apresente uma visão clara e objetiva do dataset selecionado, incluindo:
-* Identificação e origem – Nome, link de acesso, fonte (instituição, repositório, API etc.) e licença de uso.
-* Visão geral – Total de registros e atributos, período coberto e breve contextualização.
-* Atributos – Tabela com nome, descrição, tipo, unidade de medida (se aplicável) e exemplos de valores.
-* Qualidade dos dados – Presença de valores faltantes, inconsistências, duplicatas ou outliers.
+* Loan Default Dataset, https://www.kaggle.com/datasets/yasserh/loan-default-dataset, kaggle.com
+* 149 mil registros com 34 colunas no periodo de 2019 contemplando valores e caracteristicas do emprestimo como possibilidade de amortização, inadimplencia, dados do devedor como sexo, garantia, motivo do emprestimo, entre outros.<br>
+* Colunas do Dataset:
 
-**Dica:** Seja objetivo, mas inclua detalhes suficientes para que outra pessoa possa entender e reutilizar o conjunto de dados sem buscar informações extras.
-
+| titulo | descrição | dados faltantes |
+|----------|----------|----------|
+| ID | Identificador único da solicitação de empréstimo | 0 |
+| year | Ano em que o empréstimo foi solicitado | 0 |
+| loan_limit | Indica se o empréstimo segue normas padrão (cf) ou não (ncf) | 3344 |
+| Gender | Gênero do solicitante (masculino, feminino, conjunto, não informado). | 0 |
+| approv_in_adv | Indica se houve pré-aprovação do empréstimo (pre) ou não (nopre). | 908 |
+| loan_type | Categoria do tipo de empréstimo (type1, 2, 3). | 0 |
+| loan_purpose | Motivo do empréstimo (p1, p2, p3, p4). | 134 |
+| Credit_Worthiness | Solvência/idoneidade de crédito (l1, l2). | 0 |
+| open_credit | Indica se o solicitante possui contas de crédito abertas (opc) ou não (nopc). | 0 |
+| business_or_commercial | Finalidade do empréstimo: Comercial (ob/c) ou pessoal (nob/c). | 0 |
+| loan_amount | Valor solicitado no empréstimo. | 0 |
+| rate_of_interest | Taxa de juros aplicada ao empréstimo. | 36.4K |
+| Interest_rate_spread | Diferença entre a taxa de juros do empréstimo e uma taxa de referência (benchmark). | 36.6K |
+| Upfront_charges | Taxas iniciais cobradas para liberar o crédito. | 39.6K |
+| term | Prazo para pagamento do empréstimo (em meses). | 41 |
+| Neg_ammortization | Indica se permite amortização negativa. | 121 |
+| interest_only | Indica se há opção de pagar apenas juros. | 0 |
+| lump_sum_payment | Indica se exige pagamento de uma parcela única final. | 0 |
+| property_value | Valor do imóvel usado como garantia. | 15.1K |
+| construction_type | Tipo de construção (sb, mh). | 0 |
+| occupancy_type | Tipo de ocupação (principal, secundária, investimento). | 0 |
+| Secured_by | Tipo de garantia real. | 0 |
+| total_units | Quantidade de unidades no imóvel financiado. | 0 |
+| income | Renda anual do solicitante. | 9150 |
+| credit_type | Bureau de crédito consultado. | 0 |
+| Credit_Score | Pontuação de crédito do solicitante. | 0 |
+| co-applicant_credit_type | Bureau de crédito do co-requerente. | 0 |
+| age | Idade do solicitante. | 200 |
+| submission_of_application | Forma de submissão. | 0 |
+| LTV | Relação entre valor do empréstimo e valor do imóvel. | 15.1K |
+| Region | Região geográfica do imóvel. | 0 |
+| Security_Type | Tipo de segurança/garantia. | 0 |
+| Status | Em inadimplência (1) ou adimplente (0). | 0 |
+| dtir1 | Debt-to-Income Ratio. | 24.1K |
 # Canvas analítico
 
-Nesta seção, você deverá estruturar e preencher o seu Canvas Analítico, que tem como objetivo registrar a organização das ideias e apresentar o modelo de negócio do projeto.
+<img width="2000" height="1414" alt="Software-Analtics-Canvas-v1 0 pdf" src="https://github.com/user-attachments/assets/6a330ec8-6648-4f30-a634-c4adf0214b11" />
 
-O Canvas deve ser preenchido integralmente, mesmo que algumas informações ainda não estejam totalmente definidas. Nessa etapa inicial, é aceitável trabalhar com hipóteses ou estimativas, desde que sejam coerentes com o problema e o contexto definidos.
 
-**Dica:** O Canvas Analítico serve como guia visual para alinhar expectativas e direcionar o desenvolvimento. Ele poderá (e deverá) ser revisitado e atualizado ao longo do projeto.
 
 > **Links Úteis**:
 > - [Modelo do Canvas Analítico](https://github.com/ICEI-PUC-Minas-PMV-SI/PesquisaExperimentacao-Template/blob/main/help/Software-Analtics-Canvas-v1.0.pdf)
@@ -144,7 +206,12 @@ Nesta etapa, o grupo deverá produzir um vídeo de 5 a 8 minutos apresentando o 
 
 # Referências
 
-Inclua todas as referências (livros, artigos, sites, etc) utilizados no desenvolvimento do trabalho utilizando o padrão ABNT.
+ABBAS, G.; YING, Z.; AYOUBI, M. Consensus-driven feature selection for transparent and robust loan default prediction. *Scientific Reports*, v. 16, n. 1496, jan. 2026. DOI: [10.1038/s41598-025-31468-2](https://doi.org/10.1038/s41598-025-31468-2).
 
-> **Links Úteis**:
-> - [Padrão ABNT PUC Minas](https://portal.pucminas.br/biblioteca/index_padrao.php?pagina=5886)
+AKINJOLE, A.; SHOBAYO, O.; POPOOLA, J.; OKOYEIGBO, O.; OGUNLEYE, B. Ensemble-Based Machine Learning Algorithm for Loan Default Risk Prediction. *Mathematics*, v. 12, n. 21, p. 3423, out. 2024. DOI: [10.3390/math12213423](https://doi.org/10.3390/math12213423).
+
+JIN, L.; WU, Z.; ZHAO, J. Prediction of Credit Card Defaulters Based on SMOTE-XGBoost Model. In: *WHICEB 2022 Proceedings*, 2022. Disponível em: [https://aisel.aisnet.org/whiceb2022/64/](https://aisel.aisnet.org/whiceb2022/64/).
+
+LIN, C.; QIAO, N.; ZHANG, W.; LI, Y.; MA, S. Default risk prediction and feature extraction using a penalized deep neural network. *Statistics and Computing*, v. 32, n. 76, set. 2022. DOI: [10.1007/s11222-022-10140-z](https://doi.org/10.1007/s11222-022-10140-z).
+
+ZHANG, X.; ZHANG, T.; HOU, L.; LIU, X.; GUO, Z.; TIAN, Y.; LIU, Y. Data-Driven Loan Default Prediction: A Machine Learning Approach for Enhancing Business Process Management. *Systems*, v. 13, n. 7, p. 581, jul. 2025. DOI: [10.3390/systems13070581](https://doi.org/10.3390/systems13070581).
