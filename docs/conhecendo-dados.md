@@ -28,6 +28,8 @@ Inclua nesta seção, gráficos, tabelas, trechos de código e demais artefatos 
   
   #### 2. Valor do Empréstimo (loan_amount)
   Aqui observamos uma diferença significativa entre os grupos.
+
+  <img width="400" height="400" alt="Image" src="https://github.com/user-attachments/assets/df936c4e-781d-4923-9dc0-54c361f6eee3" />
   
   - **Distribuição:** A média geral é de R$ 327.755, mas a mediana é de R$ 296.500, indicando uma assimetria positiva (alguns empréstimos de valor muito alto puxam a média para cima).
   
@@ -44,6 +46,8 @@ Inclua nesta seção, gráficos, tabelas, trechos de código e demais artefatos 
   - **Insight:** Um LTV mais alto significa que o cliente tem menos "capital próprio" no imóvel. Historicamente, quanto maior o LTV, maior o risco, pois o cliente tem menos a perder em caso de execução da dívida.
   
   #### 4. Score de Crédito (Credit_Score)
+
+  <img width="400" height="400" alt="Image" src="https://github.com/user-attachments/assets/fb7bc317-9a33-413d-b5e4-7c349ca967a9" />
   
   - **Equilíbrio:** A mediana do Score está em 699.
   
