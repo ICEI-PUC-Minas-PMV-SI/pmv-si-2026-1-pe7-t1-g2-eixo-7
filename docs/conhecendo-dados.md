@@ -17,6 +17,8 @@ Inclua nesta seção, gráficos, tabelas, trechos de código e demais artefatos 
   
   #### 1. Comprometimento de Renda (dtir1)
   O dtir1 mede a porcentagem da renda mensal que o cliente compromete com dívidas.
+
+  <img width="400" height="400" alt="Image" src="https://github.com/user-attachments/assets/a468367f-2d1f-4eff-934b-972a3bdba3af" />
   
   - **Observação:** A média geral está em torno de 38,5%.
   
