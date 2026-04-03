@@ -31,10 +31,30 @@ Aqui observamos uma diferença significativa entre os grupos.
 
 - **Insight:** Curiosamente, os empréstimos de menor valor apresentam uma frequência maior de inadimplência. Isso pode sugerir que o perfil de renda desses tomadores é mais sensível a variações econômicas.
 
+### 3. Relação Empréstimo-Valor (LTV)
+O LTV indica o quanto do valor do imóvel foi financiado.
+
+- **Médias:** Clientes inadimplentes possuem um LTV médio maior (76,2%) do que os adimplentes (74,5%).
+
+- **Insight:** Um LTV mais alto significa que o cliente tem menos "capital próprio" no imóvel. Historicamente, quanto maior o LTV, maior o risco, pois o cliente tem menos a perder em caso de execução da dívida.
+
+### 4. Score de Crédito (Credit_Score)
+
+- **Equilíbrio:** A mediana do Score está em 699.
+
+- **Comportamento:** Ao analisar os histogramas, percebe-se que o Score de Crédito está distribuído de forma relativamente uniforme entre os grupos. Isso sugere que, isoladamente, o Score pode não ser o único preditor determinante de inadimplência nesta base, exigindo uma análise combinada com o DTI e LTV.
 
 ## Descrição dos achados
 
 A partir da análise descrita e exploratória realizada, descreva todos os achados considerados relevantes para o contexto em que o trabalho se insere. Por exemplo: com relação à centralidade dos dados algo chamou a atenção? Foi possível identificar correlação entre os atributos? Que tipo de correlação (forte, fraca, moderada)? 
+
+  ### Em Relação aos Boxplots e Histogramas:
+  A análise dos Boxplots e Histogramas revela que o perfil do inadimplente (Status 1) neste dataset tende a:
+
+  1. Ter um menor valor de empréstimo (mediana menor)
+  2. Ter um maior comprometimento de renda (DTI mais alto)
+  3. Possuir um financiamento que cobre uma parcela maior do valor do bem (LTV mais alto).
+  
 
 ## Ferramentas utilizadas
 
