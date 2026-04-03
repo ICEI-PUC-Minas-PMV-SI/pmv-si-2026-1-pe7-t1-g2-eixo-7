@@ -7,11 +7,11 @@ Para isso, sugere-se que sejam utilizados cálculos de medidas de tendência cen
 Inclua nesta seção, gráficos, tabelas, trechos de código e demais artefatos que você considere relevantes para entender os dados com os quais você irá trabalhar.  Além disso, inclua e comente os trechos de código mais relevantes desenvolvidos para realizar suas análises. Na pasta "src", inclua o código fonte completo.
 
 
-  ## Análise Exploratória de Dados tendo como base os gráficos Boxplot/Histograma
+  ### Análise Exploratória de Dados tendo como base os gráficos Boxplot/Histograma
   A análise abaixo foca nas variáveis quantitativas principais (DTI, Loan Amount, Credit Score e LTV) e como elas se comportam em relação ao Status (0 para adimplentes, 1 para inadimplentes).
   
   
-  ### 1. Comprometimento de Renda (dtir1)
+  #### 1. Comprometimento de Renda (dtir1)
   O dtir1 mede a porcentagem da renda mensal que o cliente compromete com dívidas.
   
   - **Observação:** A média geral está em torno de 38,5%.
@@ -20,7 +20,7 @@ Inclua nesta seção, gráficos, tabelas, trechos de código e demais artefatos 
     
   - **Insight:** Embora a diferença pareça pequena numericamente, o DTI é um indicador clássico de risco: quanto maior o comprometimento, menor a margem para imprevistos financeiros.
   
-  ### 2. Valor do Empréstimo (loan_amount)
+  #### 2. Valor do Empréstimo (loan_amount)
   Aqui observamos uma diferença significativa entre os grupos.
   
   - **Distribuição:** A média geral é de R$ 327.755, mas a mediana é de R$ 296.500, indicando uma assimetria positiva (alguns empréstimos de valor muito alto puxam a média para cima).
@@ -30,14 +30,14 @@ Inclua nesta seção, gráficos, tabelas, trechos de código e demais artefatos 
   
   - **Insight:** Curiosamente, os empréstimos de menor valor apresentam uma frequência maior de inadimplência. Isso pode sugerir que o perfil de renda desses tomadores é mais sensível a variações econômicas.
   
-  ### 3. Relação Empréstimo-Valor (LTV)
+  #### 3. Relação Empréstimo-Valor (LTV)
   O LTV indica o quanto do valor do imóvel foi financiado.
   
   - **Médias:** Clientes inadimplentes possuem um LTV médio maior (76,2%) do que os adimplentes (74,5%).
   
   - **Insight:** Um LTV mais alto significa que o cliente tem menos "capital próprio" no imóvel. Historicamente, quanto maior o LTV, maior o risco, pois o cliente tem menos a perder em caso de execução da dívida.
   
-  ### 4. Score de Crédito (Credit_Score)
+  #### 4. Score de Crédito (Credit_Score)
   
   - **Equilíbrio:** A mediana do Score está em 699.
   
