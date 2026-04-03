@@ -9,7 +9,11 @@ Inclua nesta seção, gráficos, tabelas, trechos de código e demais artefatos 
 
   ### Análise Exploratória de Dados tendo como base os gráficos Boxplot/Histograma
   A análise abaixo foca nas variáveis quantitativas principais (DTI, Loan Amount, Credit Score e LTV) e como elas se comportam em relação ao Status (0 para adimplentes, 1 para inadimplentes).
-  
+
+  Códigos utilizados para calcular em relação ao status:
+  -  display(df.groupby('Status')['dtir1'].mean())
+  -  display(df.groupby('Status')['loan_amount'].median())
+  -  display(df.groupby('Status')['LTV'].median())
   
   #### 1. Comprometimento de Renda (dtir1)
   O dtir1 mede a porcentagem da renda mensal que o cliente compromete com dívidas.
