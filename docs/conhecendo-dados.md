@@ -17,9 +17,7 @@ Inclua nesta seção, gráficos, tabelas, trechos de código e demais artefatos 
   
   #### 1. Comprometimento de Renda (dtir1)
   O dtir1 mede a porcentagem da renda mensal que o cliente compromete com dívidas.
-
-  <img src="https://github.com/user-attachments/assets/bf01b031-506c-49f2-b5ed-795963abfb1e" width="400">
-  <img src="https://github.com/user-attachments/assets/f1bfdfaa-4458-4d1e-a2c0-6a71f1b0a45e" width="400">
+  <img width="400" height="400" alt="Image" src="https://github.com/user-attachments/assets/ae269cd9-4c04-4b39-8b5e-06693af2452c" />
   
   - **Observação:** A média geral está em torno de 38,5%.
   
@@ -29,8 +27,9 @@ Inclua nesta seção, gráficos, tabelas, trechos de código e demais artefatos 
   
   #### 2. Valor do Empréstimo (loan_amount)
   Aqui observamos uma diferença significativa entre os grupos.
-
-  <img width="400" height="400" alt="Image" src="https://github.com/user-attachments/assets/df936c4e-781d-4923-9dc0-54c361f6eee3" />
+  
+  <img src="https://github.com/user-attachments/assets/bf01b031-506c-49f2-b5ed-795963abfb1e" width="400">
+  <img src="https://github.com/user-attachments/assets/f1bfdfaa-4458-4d1e-a2c0-6a71f1b0a45e" width="400">
   
   - **Distribuição:** A média geral é de R$ 327.755, mas a mediana é de R$ 296.500, indicando uma assimetria positiva (alguns empréstimos de valor muito alto puxam a média para cima).
   
