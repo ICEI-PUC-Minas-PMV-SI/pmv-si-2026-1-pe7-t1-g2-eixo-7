@@ -1,10 +1,23 @@
 # Conhecendo os dados
 
-Nesta seção, deverá ser registrada uma detalhada análise descritiva e exploratória sobre a base de dados selecionada na Etapa 1 com o objetivo de compreender a estrutura dos dados, detectar eventuais _outliers_ e também, avaliar/detectar as relações existentes entre as variáveis analisadas.
+No dataset escolhido, foi detectada uma parte significativa de dados faltantes em algumas features, enquanto outras apresentavam uma parcela menor de omissões. Foram aplicadas diferentes técnicas para mitigar essas lacunas: entre elas, a substituição pela mediana para dados numéricos e pela moda para os categóricos, nos casos com menor volume de dados faltantes. Para dados com um número de omissões mais expressivo e com importância substancial para a análise, utilizou-se a substituição pela mediana de agrupamento, segmentada por região e tipo de ocupação. Por fim, para as variáveis financeiras mais complexas, que apresentavam lacunas superiores a 20.000 registros, utilizou-se o algoritmo MICE (Multivariate Imputation by Chained Equations).
 
-Para isso, sugere-se que sejam utilizados cálculos de medidas de tendência central, como média, mediana e moda, para entender a centralidade dos dados; sejam exploradas medidas de dispersão como desvio padrão e intervalos interquartil para avaliar a variabilidade dos dados; sejam utilizados gráficos descritivos como histogramas e box plots, para representar visualmente as características essenciais dos dados, pois essas visualizações podem facilitar a identificação de padrões e anomalias; sejam analisadas as relações entre as variáveis por meio de análise de correlação, gráficos de dispersões, mapas de calor, entre outras técnicas. 
+Após a limpeza inicial, observou-se que os valores de assimetria do LTV, que eram de 120,61, baixaram, mas continuavam acima de 100. Esse resultado chamou a atenção para dados que não condizem com a realidade; ao analisar os valores máximos, percebeu-se a existência de registros alterados que não haviam sido corrigidos.
 
-Inclua nesta seção, gráficos, tabelas, trechos de código e demais artefatos que você considere relevantes para entender os dados com os quais você irá trabalhar.  Além disso, inclua e comente os trechos de código mais relevantes desenvolvidos para realizar suas análises. Na pasta "src", inclua o código fonte completo.
+<img width="505" height="212" alt="image" src="https://github.com/user-attachments/assets/bc3460ef-c4c1-4baa-97ce-4635126140dd" />
+
+Nota-se a presença de valores de Loan-to-Value (LTV) acima de 1.000% e uma quantidade considerável acima de 200%, o que oferece um risco tanto ao banco quanto ao projeto, criando variáveis com dados irreais. Observou-se que simplesmente deletar as linhas irreais sem critério poderia causar falhas na análise. Após filtrar essas linhas com valores próximos à realidade (LTV < 150% e Renda > 0) e re-executar o preenchimento dos dados faltantes, foi possível averiguar as medidas de tendência central corretas com o dataset devidamente tratado.
+
+<img width="609" height="426" alt="image" src="https://github.com/user-attachments/assets/51865190-0e6d-4f78-8394-64023d5707ca" />
+
+Ao observar o Income (renda), nota-se uma disparidade social. Analisando a curtose, a assimetria, o máximo e a média, entende-se que a base ganha, em média, 6.000, mas que poucos indivíduos ganham valores extremamente altos que puxam essa média para cima, visto que a mediana é inferior à média. 
+
+Já analisando o LTV, a média (72,22) e a mediana (74,74) estão muito próximas. Isso indica que a maioria dos empréstimos gira em torno de 75% do valor do imóvel  um valor condizenteaos críterios bancarios. Mesmo havendo casos que excedem 100%, isso se justifica pois alguns tipos de empréstimos cobrem não apenas o valor do imóvel, mas também custos administrativos e fiscais, sendo proveitoso observar se essa escolha agrega valor ao modelo e à análise do projeto.
+
+Em contrapartida à distribuição da renda, o LTV apresenta um comportamento mais centralizado indicando que este dataset abrange desde pequenos créditos habitacionais até financiamentos de alto padrão.
+
+Por fim o Credit_Score sendo uma variavel central para os bancos ter uma distribuição equilibrada mostra que tem tantos cliente com credito medio e com credito alto em proporções semelhantes
+
 
 
   ### Análise Exploratória de Dados tendo como base os gráficos Boxplot/Histograma
