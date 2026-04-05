@@ -68,6 +68,246 @@ Por fim o Credit_Score sendo uma variavel central para os bancos ter uma distrib
   
   - **Comportamento:** Ao analisar os histogramas, percebe-se que o Score de Crédito está distribuído de forma relativamente uniforme entre os grupos. Isso sugere que, isoladamente, o Score pode não ser o único preditor determinante de inadimplência nesta base, exigindo uma análise combinada com o DTI e LTV.
 
+---
+
+  ### Análise de Correlação entre Variáveis Numéricas
+  Esta seção investiga as relações entre as variáveis do dataset de crédito imobiliário utilizando o **coeficiente de correlação de Pearson**, gráficos de dispersão, box plots e gráficos de barras comparativos. O objetivo é identificar padrões que expliquem o comportamento de inadimplência (`Status = 1`) e validar hipóteses sobre a política de concessão de crédito.
+
+> **Nota metodológica:** O coeficiente de Pearson mede a força e a direção de relações lineares entre variáveis numéricas. Valores próximos de ±1 indicam correlação forte; próximos de 0, correlação fraca ou ausente. Para variáveis categóricas ordinais (como faixa etária e região), foram utilizados boxplots, barras de taxa de inadimplência e análise comparativa de médias/medianas.
+
+---
+
+#### LTV vs. Status de Inadimplência
+
+**Hipótese:** Clientes com LTV (Loan-to-Value) mais alto — ou seja, que financiam uma proporção maior do valor do imóvel — têm maior probabilidade de inadimplência (teoria do *Equity Negativo*).
+
+```python
+from scipy import stats
+d = df[['LTV','Status']].dropna()
+r, p = stats.pearsonr(d['LTV'], d['Status'])
+print(f"r = {r:.4f}, p = {p:.2e}")
+# r = 0.0389, p = 6.83e-46
+
+df.groupby('Status')['LTV'].agg(['mean','median'])
+#          mean  median
+# Status               
+# 0       72.06   74.50
+# 1       76.29   79.36
+```
+
+![LTV vs Status](graficos_correlacao/01_ltv_vs_status.png)
+
+**Resultado:** A correlação de Pearson entre LTV e Status é **r = 0,039 (p < 0,001)**, estatisticamente significativa, porém **fraca**. O LTV médio dos inadimplentes (76,3%) é ligeiramente superior ao dos adimplentes (72,1%), e a mediana confirma essa diferença (~5 p.p.). O box plot revela distribuições similares entre os dois grupos, com sobreposição elevada, o que indica que o LTV isolado não é um preditor robusto de inadimplência — mas que a tendência existe e é consistente.
+
+---
+
+#### DTI (dtir1) vs. Status de Inadimplência
+
+**Hipótese:** Quanto maior o comprometimento de renda com dívidas (DTI — *Debt-to-Income Ratio*), maior o risco de inadimplência. Esperava-se identificar um "ponto de quebra" financeiro.
+
+```python
+d = df[['dtir1','Status']].dropna()
+r, p = stats.pearsonr(d['dtir1'], d['Status'])
+print(f"r = {r:.4f}, p = {p:.2e}")
+# r = 0.0781, p = 1.16e-167
+
+df.groupby('Status')['dtir1'].agg(['mean','median'])
+#          mean  median
+# Status               
+# 0       37.37    38.0
+# 1       39.60    42.0
+```
+
+![DTI vs Status](graficos_correlacao/02_dti_vs_status.png)
+
+**Resultado:** Esta é a **correlação mais forte** entre as variáveis numéricas e o status de inadimplência (**r = 0,078, p < 0,001**). Embora ainda fraca em magnitude absoluta, o DTI apresenta diferença consistente: inadimplentes possuem DTI mediano de 42%, contra 38% dos adimplentes. O gráfico de taxa de inadimplência por faixa de DTI revela uma escalada progressiva: clientes com DTI acima de 50% apresentam a maior taxa de calote, confirmando parcialmente a hipótese do "ponto de quebra".
+
+---
+
+#### Credit Score vs. Taxa de Juros
+
+**Hipótese:** Clientes com maior Credit Score recebem taxas de juros menores, validando uma política de precificação baseada em risco.
+
+```python
+d = df[['Credit_Score','rate_of_interest']].dropna()
+r, p = stats.pearsonr(d['Credit_Score'], d['rate_of_interest'])
+print(f"r = {r:.4f}, p = {p:.4f}")
+# r = -0.0013, p = 0.6559
+```
+
+![Credit Score vs Taxa de Juros](graficos_correlacao/03_creditscore_vs_interest.png)
+
+**Resultado:** **Ausência quase total de correlação linear** (r = -0,0013, p = 0,656 — **não significativo**). O gráfico de dispersão confirma uma nuvem de pontos sem tendência clara. A análise por faixa de score também não revela diferença expressiva na taxa de juros média entre clientes de baixo e alto score. Isso é um achado relevante: a política de precificação da instituição financeira **não parece refletir o risco individual do cliente** de forma eficaz, ao menos segundo o Credit Score.
+
+---
+
+#### Valor do Empréstimo vs. Taxas Iniciais (Upfront Charges)
+
+**Hipótese:** As taxas iniciais crescem proporcionalmente ao valor do empréstimo. Taxas elevadas em empréstimos pequenos poderiam pressionar financeiramente o cliente já no início do contrato.
+
+```python
+d = df[['loan_amount','Upfront_charges']].dropna()
+r, p = stats.pearsonr(d['loan_amount'], d['Upfront_charges'])
+print(f"r = {r:.4f}, p = {p:.2e}")
+# r = 0.0656, p = 4.01e-104
+```
+
+![Empréstimo vs Taxas Iniciais](graficos_correlacao/04_loanamount_vs_upfront.png)
+
+**Resultado:** Correlação positiva fraca (**r = 0,066, p < 0,001**). Embora as taxas absolutas cresçam com o valor do empréstimo, a análise percentual (taxas / valor do empréstimo) revela que **empréstimos menores suportam uma taxa inicial proporcionalmente maior**. Isso confirma a hipótese de que o peso das taxas iniciais é desproporcionalmente maior para tomadores de crédito de menor volume, potencialmente contribuindo para o risco de inadimplência precoce.
+
+---
+
+#### Região vs. Valor do Imóvel
+
+**Hipótese:** Regiões distintas apresentam valores medianos de imóveis diferentes, indicando desigualdades nas garantias oferecidas.
+
+```python
+df.groupby('Region')['property_value'].median().sort_values(ascending=False)
+# south         428.000
+# North         408.000
+# North-East    388.000
+# central       378.000
+```
+
+![Região vs Valor do Imóvel](graficos_correlacao/05_region_vs_propertyvalue.png)
+
+**Resultado:** A região **Sul** apresenta imóveis com valor mediano ligeiramente superior ($428k), enquanto a região **Central** possui os menores valores medianos ($378k). A diferença não é dramática entre as regiões, mas a dispersão (box plot) revela que todas apresentam alta variabilidade, com presença de imóveis de alto valor em todas elas. A região **Nordeste**, com valor mediano intermediário ($388k), também é a que apresenta maior taxa de inadimplência (seção 4.6), o que sugere que o valor da garantia isolado não explica integralmente o risco regional.
+
+---
+
+#### Região vs. Taxa de Inadimplência
+
+**Hipótese:** Algumas regiões apresentam taxas de inadimplência sistematicamente superiores, indicando risco concentrado geograficamente.
+
+```python
+df.groupby('Region')['Status'].mean() * 100
+# North         22.51%
+# North-East    30.45%
+# central       27.54%
+# south         26.63%
+```
+
+![Região vs Inadimplência](graficos_correlacao/06_region_vs_status.png)
+
+**Resultado:** Existe **variação significativa** entre regiões. A região **Nordeste** se destaca com taxa de inadimplência de **30,5%**, quase 8 pontos percentuais acima da região Norte (22,5%). A região Central (27,5%) e Sul (26,6%) ficam em posições intermediárias. Dado que o Nordeste concentra apenas ~830 contratos (menos de 1% da amostra), esse resultado deve ser interpretado com cautela — pode refletir tanto risco sistêmico regional quanto características específicas da pequena amostra.
+
+---
+
+#### Tipo de Ocupação vs. LTV
+
+**Hipótese:** Investidores (imóveis para renda/aluguel) assumem LTVs mais altos que moradores, por terem maior tolerância ao risco financeiro.
+
+```python
+df.groupby('occupancy_type')['LTV'].agg(['mean','median'])
+#                  mean  median
+# occupancy_type               
+# ir (Investimento) 62.80   67.69
+# pr (Residência P.) 73.30   76.01
+# sr (2ª Residência) 71.58   75.30
+```
+
+![Ocupação vs LTV](graficos_correlacao/07_occupancy_vs_ltv.png)
+
+**Resultado:** Contrariamente à hipótese, **imóveis de investimento (ir) apresentam o menor LTV médio (62,8%)**, enquanto residências principais (pr) têm o maior (73,3%). Isso pode indicar que investidores realizam maiores entradas (down payment), provavelmente por não terem acesso a programas de financiamento subsidiados para imóveis não residenciais — ou por adotarem estratégia mais conservadora em ativos de renda. Residências principais, muitas vezes financiadas por programas com entrada mínima, acabam com LTV mais elevado.
+
+---
+
+#### Faixa Etária vs. Renda
+
+**Hipótese:** A renda segue uma curva de ciclo de vida, com pico nas faixas de 45–54 anos e queda nas extremidades etárias.
+
+```python
+df[df['age'].isin(age_order)].groupby('age')['income'].median().reindex(age_order)
+# <25      ~3.960
+# 25-34    ~4.920
+# 35-44    ~5.760
+# 45-54    ~6.480
+# 55-64    ~6.240
+# 65-74    ~5.520
+# >74      ~4.440
+```
+
+![Idade vs Renda](graficos_correlacao/08_age_vs_income.png)
+
+**Resultado:** Os dados confirmam parcialmente a hipótese. A renda mediana cresce progressivamente até a faixa **45–54 anos** (pico) e depois declina gradualmente. Clientes com menos de 25 anos e acima de 74 anos apresentam as menores rendas medianas, com alta variabilidade (box plot). A curva em formato de "sino assimétrico" é consistente com a teoria do ciclo de vida financeiro, indicando que tomadores jovens e idosos têm base de renda mais frágil.
+
+---
+
+#### Gênero vs. Credit Score
+
+**Hipótese:** Pode existir diferença no comportamento de score entre gêneros, reflexo de padrões históricos de acesso ao crédito.
+
+```python
+df[df['Gender'].isin(['Male','Female'])].groupby('Gender')['Credit_Score'].agg(['mean','median'])
+#           mean  median
+# Female  698.71   698.0
+# Male    699.80   700.0
+```
+
+![Gênero vs Credit Score](graficos_correlacao/09_gender_vs_creditscore.png)
+
+**Resultado:** A diferença de Credit Score entre homens (média 699,8) e mulheres (média 698,7) é **negligenciável**, inferior a 2 pontos em uma escala de centenas. As distribuições são praticamente idênticas (box plot). **Não há evidência de disparidade de score por gênero** neste dataset, o que é um resultado positivo do ponto de vista de equidade no acesso ao crédito.
+
+---
+
+#### Faixa Etária vs. Inadimplência
+
+**Hipótese:** Clientes mais jovens teriam maior risco de inadimplência por instabilidade de emprego; idosos por renda reduzida.
+
+```python
+df[df['age'].isin(age_order)].groupby('age')['Status'].mean().reindex(age_order) * 100
+# <25      28.95%
+# 25-34    22.19%
+# 35-44    22.27%
+# 45-54    24.05%
+# 55-64    25.89%
+# 65-74    26.86%
+# >74      30.01%
+```
+
+![Idade vs Inadimplência](graficos_correlacao/10_age_vs_status.png)
+
+**Resultado:** A hipótese se confirma para **ambos os extremos etários**. Clientes com menos de 25 anos (28,9%) e acima de 74 anos (30,0%) apresentam as maiores taxas de inadimplência. O ponto de menor risco está na faixa **25–44 anos** (~22%), correspondendo ao período de maior estabilidade laboral e menor endividamento relativo. A partir dos 45 anos, a taxa cresce progressivamente — possivelmente associada ao aumento do DTI em idades mais avançadas e à redução de renda na aposentadoria.
+
+---
+
+#### Modalidade Interest-Only vs. Inadimplência
+
+**Hipótese:** Contratos onde o cliente paga apenas juros (sem amortização do principal) apresentam maior taxa de inadimplência.
+
+```python
+df.groupby('interest_only')['Status'].mean() * 100
+# int_only    27.31%
+# not_int     24.51%
+```
+
+![Interest-Only vs Status](graficos_correlacao/11_interestonly_vs_status.png)
+
+**Resultado:** Clientes em modalidade *interest-only* apresentam taxa de inadimplência de **27,3%**, contra 24,5% na modalidade convencional — uma diferença de ~2,8 pontos percentuais. A hipótese se confirma, ainda que a magnitude seja moderada. A explicação teórica é consistente: sem redução do saldo devedor, o cliente mantém exposição total ao risco ao longo de todo o contrato, e qualquer choque de renda pode levar ao calote.
+
+---
+
+#### Mapa de Calor — Correlação de Pearson Geral
+
+Para uma visão integrada das relações lineares entre todas as variáveis numéricas:
+
+```python
+num_cols = ['loan_amount','rate_of_interest','Upfront_charges','property_value',
+            'income','Credit_Score','LTV','dtir1','term','Status']
+corr = df[num_cols].corr(method='pearson')
+```
+
+![Mapa de Calor de Correlação](graficos_correlacao/12_heatmap_correlacao.png)
+
+**Principais observações do heatmap:**
+- `loan_amount` e `property_value` apresentam a **maior correlação positiva** do dataset (**r = 0,73**), o que é esperado — o valor financiado é naturalmente proporcional ao valor do bem.
+- `loan_amount` e `Upfront_charges` também têm correlação moderada positiva (~0,07 a 0,10), confirmando a análise da seção 4.4.
+- `Credit_Score` e `rate_of_interest` apresentam correlação próxima de **zero** (~-0,001), reforçando o achado da seção 4.3.
+- A variável `Status` apresenta correlações muito fracas com todas as demais variáveis numéricas isoladas, indicando que a inadimplência é um fenômeno **multivariado**, não explicado por nenhuma variável isolada.
+
+---
+
 ## Descrição dos achados
 
 A partir da análise descrita e exploratória realizada, descreva todos os achados considerados relevantes para o contexto em que o trabalho se insere. Por exemplo: com relação à centralidade dos dados algo chamou a atenção? Foi possível identificar correlação entre os atributos? Que tipo de correlação (forte, fraca, moderada)? 
