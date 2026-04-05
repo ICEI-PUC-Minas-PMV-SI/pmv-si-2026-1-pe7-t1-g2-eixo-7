@@ -310,16 +310,52 @@ corr = df[num_cols].corr(method='pearson')
 
 ## Descrição dos achados
 
-A partir da análise descrita e exploratória realizada, descreva todos os achados considerados relevantes para o contexto em que o trabalho se insere. Por exemplo: com relação à centralidade dos dados algo chamou a atenção? Foi possível identificar correlação entre os atributos? Que tipo de correlação (forte, fraca, moderada)? 
-
   ### Em Relação aos Boxplots e Histogramas:
   A análise dos Boxplots e Histogramas revela que o perfil do inadimplente (Status 1) neste dataset tende a:
 
   1. Ter um menor valor de empréstimo (mediana menor)
   2. Ter um maior comprometimento de renda (DTI mais alto)
   3. Possuir um financiamento que cobre uma parcela maior do valor do bem (LTV mais alto).
-  
 
+---
+
+### Análise de Correlação entre Variáveis Numéricas
+A análise de correlação realizada sobre o dataset de inadimplência imobiliária revelou um conjunto de achados com diferentes graus de relevância prática e estatística:
+
+**Correlações com o Status de inadimplência**
+
+Nenhuma das variáveis numéricas analisadas apresentou correlação forte com o status de inadimplência. A variável de maior coeficiente foi o DTI (*r* = 0,078), seguida pelo LTV (*r* = 0,039) e pela taxa de juros (*r* = 0,023). Embora todas sejam estatisticamente significativas (p < 0,001) dada a grande amostra (148k registros), os valores absolutos indicam **correlações fracas**. Isso sugere que o risco de inadimplência é um fenômeno complexo, não capturado linearmente por variáveis isoladas, e que modelos de machine learning com interações entre variáveis tendem a performar muito melhor do que análises univariadas.
+
+**DTI como principal preditor linear**
+
+O índice de comprometimento de renda (DTI) foi a variável com maior correlação com inadimplência. A análise por faixas revela escalada progressiva de risco a partir de 40%, com inadimplentes apresentando DTI mediano de 42% contra 38% dos adimplentes. Esse achado reforça a importância de limites de DTI nas políticas de crédito.
+
+**Ausência de precificação baseada em score**
+
+O achado mais surpreendente foi a **correlação praticamente nula entre Credit Score e taxa de juros** (*r* = -0,001, p = 0,66 — não significativo). Isso contradiz a teoria padrão de precificação por risco e levanta questionamentos sobre a lógica de formação de taxas na instituição analisada.
+
+**Risco geográfico maior no Nordeste**
+
+A região Nordeste apresenta taxa de inadimplência de 30,5%, significativamente acima da média geral de 24,6%. Associada ao menor valor mediano de imóveis dessa região, essa concentração de risco geográfico deve ser monitorada, mesmo considerando o tamanho menor da amostra regional.
+
+**Perfil de risco por ciclo de vida**
+
+Tanto a análise etária quanto a análise de renda confirmam um padrão de ciclo de vida: os extremos etários (<25 e >74 anos) concentram maior inadimplência e menor renda mediana. A faixa de 25–44 anos representa o segmento de menor risco.
+
+**Interest-Only como fator de risco moderado**
+
+A modalidade *interest-only* apresenta taxa de inadimplência ~2,8 p.p. superior à modalidade convencional, confirmando que a ausência de amortização do principal representa risco adicional, ainda que moderado neste dataset.
+
+**Equidade de gênero no score**
+
+Não foi identificada diferença relevante no Credit Score médio entre homens e mulheres (< 2 pontos), o que representa um resultado positivo do ponto de vista de equidade no sistema de avaliação de crédito.
+
+**Comportamento do LTV por tipo de ocupação**
+
+Contrariamente à hipótese inicial, investidores (imóveis para renda) apresentam LTV médio inferior ao de moradores. A explicação mais provável é a exigência de maior entrada para financiamentos não residenciais, reduzindo o LTV médio desse segmento.
+
+---
+  
 ## Ferramentas utilizadas
 
 ### Análise de Correlação entre Variáveis Numéricas
