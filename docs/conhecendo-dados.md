@@ -322,6 +322,15 @@ A partir da análise descrita e exploratória realizada, descreva todos os achad
 
 ## Ferramentas utilizadas
 
-Existem muitas ferramentas diferentes que podem ser utilizadas para fazer a análise dos dados. Nesta seção, descreva as ferramentas/tecnologias utilizadas e sua aplicação. Vale destacar que, preferencialmente, as análises deverão ser realizadas utilizando a linguagem de programação Python.
+### Análise de Correlação entre Variáveis Numéricas
+| Ferramenta | Aplicação |
+|---|---|
+| Python | Linguagem principal de análise |
+| pandas | Manipulação e agregação do dataset |
+| scipy.stats | Cálculo do coeficiente de correlação de Pearson e p-values |
+| matplotlib | Geração de gráficos de dispersão, barras e box plots |
+| seaborn | Mapa de calor de correlação e estilização dos gráficos |
 
+O código fonte completo está disponível em `src/correlacao_analise.py`.
 
+---
