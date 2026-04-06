@@ -326,33 +326,63 @@ A análise de correlação realizada sobre o dataset de inadimplência imobiliá
 
 Nenhuma das variáveis numéricas analisadas apresentou correlação forte com o status de inadimplência. A variável de maior coeficiente foi o DTI (*r* = 0,078), seguida pelo LTV (*r* = 0,039) e pela taxa de juros (*r* = 0,023). Embora todas sejam estatisticamente significativas (p < 0,001) dada a grande amostra (148k registros), os valores absolutos indicam **correlações fracas**. Isso sugere que o risco de inadimplência é um fenômeno complexo, não capturado linearmente por variáveis isoladas, e que modelos de machine learning com interações entre variáveis tendem a performar muito melhor do que análises univariadas.
 
+<img width="577" height="379" alt="image" src="https://github.com/user-attachments/assets/af7edfe7-d559-4651-b60c-5022a40e1b7b" />
+
 **DTI como principal preditor linear**
 
 O índice de comprometimento de renda (DTI) foi a variável com maior correlação com inadimplência. A análise por faixas revela escalada progressiva de risco a partir de 40%, com inadimplentes apresentando DTI mediano de 42% contra 38% dos adimplentes. Esse achado reforça a importância de limites de DTI nas políticas de crédito.
+
+<img width="457" height="313" alt="image" src="https://github.com/user-attachments/assets/d441c79f-db23-4f6b-9431-6cec3ae66bcd" />
+<img width="352" height="261" alt="image" src="https://github.com/user-attachments/assets/eee49a83-c86e-4636-8930-eb7ecc56709a" />
 
 **Ausência de precificação baseada em score**
 
 O achado mais surpreendente foi a **correlação praticamente nula entre Credit Score e taxa de juros** (*r* = -0,001, p = 0,66 — não significativo). Isso contradiz a teoria padrão de precificação por risco e levanta questionamentos sobre a lógica de formação de taxas na instituição analisada.
 
+<img width="450" height="312" alt="image" src="https://github.com/user-attachments/assets/b382c028-82d2-434f-9727-6a08efe16273" />
+<img width="235" height="198" alt="image" src="https://github.com/user-attachments/assets/2d7d5038-0a19-4e4c-b33b-1ea754267241" />
+
 **Risco geográfico maior no Nordeste**
 
 A região Nordeste apresenta taxa de inadimplência de 30,5%, significativamente acima da média geral de 24,6%. Associada ao menor valor mediano de imóveis dessa região, essa concentração de risco geográfico deve ser monitorada, mesmo considerando o tamanho menor da amostra regional.
+
+<img width="461" height="317" alt="image" src="https://github.com/user-attachments/assets/6edc29db-4e39-4396-a624-33638fd64363" />
+<img width="482" height="315" alt="image" src="https://github.com/user-attachments/assets/6ef30e87-0a3d-4cda-b26a-8abf4505ca4d" />
+
+
 
 **Perfil de risco por ciclo de vida**
 
 Tanto a análise etária quanto a análise de renda confirmam um padrão de ciclo de vida: os extremos etários (<25 e >74 anos) concentram maior inadimplência e menor renda mediana. A faixa de 25–44 anos representa o segmento de menor risco.
 
+<img width="514" height="367" alt="image" src="https://github.com/user-attachments/assets/e2d72838-9645-496b-837d-4450cc3d316a" />
+<img width="529" height="368" alt="image" src="https://github.com/user-attachments/assets/d95cae53-a9b6-48ea-af3a-0ac17776fdcd" />
+
+
 **Interest-Only como fator de risco moderado**
 
 A modalidade *interest-only* apresenta taxa de inadimplência ~2,8 p.p. superior à modalidade convencional, confirmando que a ausência de amortização do principal representa risco adicional, ainda que moderado neste dataset.
+
+<img width="407" height="316" alt="image" src="https://github.com/user-attachments/assets/cfa23f9b-760d-4cdd-a4d4-b39deeecb88f" />
+
 
 **Equidade de gênero no score**
 
 Não foi identificada diferença relevante no Credit Score médio entre homens e mulheres (< 2 pontos), o que representa um resultado positivo do ponto de vista de equidade no sistema de avaliação de crédito.
 
+<img width="410" height="313" alt="image" src="https://github.com/user-attachments/assets/29371c07-e3d5-4439-a6da-3018d1e428ee" />
+<img width="460" height="310" alt="image" src="https://github.com/user-attachments/assets/928b441a-de89-475b-b1cb-52669ef1d845" />
+
+
+
 **Comportamento do LTV por tipo de ocupação**
 
 Contrariamente à hipótese inicial, investidores (imóveis para renda) apresentam LTV médio inferior ao de moradores. A explicação mais provável é a exigência de maior entrada para financiamentos não residenciais, reduzindo o LTV médio desse segmento.
+
+<img width="685" height="475" alt="image" src="https://github.com/user-attachments/assets/cc606982-09a8-42e5-9824-f9eee960485c" />
+<img width="772" height="471" alt="image" src="https://github.com/user-attachments/assets/00804e0a-385a-4a1c-9260-e58d4f0cc206" />
+
+
 
 ---
   
