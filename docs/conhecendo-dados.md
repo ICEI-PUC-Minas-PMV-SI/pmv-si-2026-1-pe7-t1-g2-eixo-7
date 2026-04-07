@@ -397,6 +397,6 @@ Contrariamente à hipótese inicial, investidores (imóveis para renda) apresent
 | matplotlib | Geração de gráficos de dispersão, barras e box plots |
 | seaborn | Mapa de calor de correlação e estilização dos gráficos |
 
-O código fonte completo está disponível em `https://colab.research.google.com/drive/1qrRucNBC5aHISp20J0aqtudNqOR5I5Jh?usp=sharing#scrollTo=Y6e_oI2SKHph`.
+O código fonte completo está disponível em `src/inadimplência.ipynb`.
 
 ---
