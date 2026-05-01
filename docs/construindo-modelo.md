@@ -1,30 +1,158 @@
 # Preparação dos dados
 
-Nesta etapa, deverão ser descritas todas as técnicas utilizadas para pré-processamento/tratamento dos dados.
+O tratamento dos dados visou construir uma base que fosse limpa, consistente e adequada ao algoritmo de machine learning que seria utilizado. As escolhas feitas foram guiadas pelo diagnóstico prévio realizado nos dados, principalmente no que diz respeito aos valores ausentes, que revelaram padrões significativos para a questão da inadimplência.
 
-Algumas das etapas podem estar relacionadas à:
+## 1. Diagnóstico inicial e análise dos dados ausentes
 
-* Limpeza de Dados: trate valores ausentes: decida como lidar com dados faltantes, seja removendo linhas, preenchendo com médias, medianas ou usando métodos mais avançados; remova _outliers_: identifique e trate valores que se desviam significativamente da maioria dos dados.
+Antes de iniciar as transformações, foi feito um diagnóstico aprofundado da qualidade dos dados, utilizando `df.isnull().sum()` e a biblioteca `missingno` para visualizar o padrão de ausência. Em vez de tratar os nulos de forma genérica, optou-se por entender se eles **carregavam significado** em relação à variável-alvo (`Status`).
 
-* Transformação de Dados: normalize/padronize: torne os dados comparáveis, normalizando ou padronizando os valores para uma escala específica; codifique variáveis categóricas: converta variáveis categóricas em uma forma numérica, usando técnicas como _one-hot encoding_.
+Foram conduzidas as seguintes análises:
 
-* _Feature Engineering_: crie novos atributos que possam ser mais informativos para o modelo; selecione características relevantes e descarte as menos importantes.
+- **Casos críticos:** identificou-se quantos registros inadimplentes (`Status=1`) possuíam mais de cinco colunas faltantes, revelando um padrão estrutural de ausência associada à inadimplência.
+- **Cruzamento de nulos com inadimplência:** para colunas suspeitas (`rate_of_interest`, `Interest_rate_spread`, `Upfront_charges`, `property_value`, `LTV`, `dtir1`, `income`), calculou-se o percentual de inadimplentes entre os registros com valor nulo, indicando que a falta de informação é, em si, um sinal preditivo.
+- **Interseção de ausências:** verificou-se que `rate_of_interest`, `property_value` e `LTV` tendem a estar ausentes simultaneamente, o que sugere que esses nulos representam **processos de crédito interrompidos** antes da formalização do contrato.
 
-* Tratamento de dados desbalanceados: se as classes de interesse forem desbalanceadas, considere técnicas como _oversampling_, _undersampling_ ou o uso de algoritmos que lidam naturalmente com desbalanceamento.
+Esse diagnóstico foi determinante para definir a estratégia de tratamento dos nulos, evitando descartá-los indiscriminadamente.
 
-* Separação de dados: divida os dados em conjuntos de treinamento, validação e teste para avaliar o desempenho do modelo de maneira adequada.
-  
-* Manuseio de Dados Temporais: se lidar com dados temporais, considere a ordenação adequada e técnicas específicas para esse tipo de dado.
-  
-* Redução de Dimensionalidade: aplique técnicas como PCA (Análise de Componentes Principais) se a dimensionalidade dos dados for muito alta.
+## 2. Limpeza de dados
 
-* Validação Cruzada: utilize validação cruzada para avaliar o desempenho do modelo de forma mais robusta.
+A limpeza foi realizada em duas frentes:
 
-* Monitoramento Contínuo: atualize e adapte o pré-processamento conforme necessário ao longo do tempo, especialmente se os dados ou as condições do problema mudarem.
+**Filtros de coerência:** registros com `income <= 0` ou `dtir1 < 0` foram considerados inconsistentes (renda ou comprometimento de renda negativos não fazem sentido no contexto de crédito) e removidos. Os valores ausentes nessas colunas foram preservados nesta etapa, pois seriam imputados posteriormente:
 
-* Entre outras....
+```python
+df_clean = df[
+    ((df['income'] > 0) | (df['income'].isnull())) &
+    ((df['dtir1'] >= 0) | (df['dtir1'].isnull()))
+].copy()
+```
 
-Avalie quais etapas são importantes para o contexto dos dados que você está trabalhando, pois a qualidade dos dados e a eficácia do pré-processamento desempenham um papel fundamental no sucesso de modelo(s) de aprendizado de máquina. É importante entender o contexto do problema e ajustar as etapas de preparação de dados de acordo com as necessidades específicas de cada projeto.
+**Outliers:** os boxplots e histogramas das variáveis numéricas (`loan_amount`, `LTV`, `Credit_Score`, `dtir1`) revelaram a presença de valores extremos. **Optou-se por preservar os outliers**, pois o algoritmo Random Forest é robusto a valores extremos por operar com divisões binárias baseadas em valores de corte, e não em distância. Remover outliers poderia descartar casos legítimos de risco elevado, justamente os mais informativos para um modelo de inadimplência.
+
+## 3. Feature Engineering
+
+Foi criada uma variável binária derivada chamada `processo_interrompido`, que sinaliza registros nos quais qualquer uma das colunas-chave do contrato (`rate_of_interest`, `property_value`, `Interest_rate_spread`, `LTV`, `Upfront_charges`) estava ausente:
+
+```python
+df_clean['processo_interrompido'] = np.where(
+    (df_clean['rate_of_interest'].isnull()) |
+    (df_clean['property_value'].isnull()) |
+    (df_clean['Interest_rate_spread'].isnull()) |
+    (df_clean['LTV'].isnull()) |
+    (df_clean['Upfront_charges'].isnull()),
+    1, 0
+)
+```
+
+A motivação da feature foi capturar o sinal informativo da própria ausência. Posteriormente, na fase de modelagem, essa variável foi reavaliada e removida por configurar potencial _data leakage_ (informação posterior ao momento da concessão do crédito), conforme detalhado na seção de modelagem.
+
+Adicionalmente, a variável `age`, originalmente categórica em faixas (`<25`, `25-34`, ..., `>74`), foi mapeada para uma versão numérica auxiliar (`age_num`), utilizando o ponto médio de cada faixa, para viabilizar sua participação no processo de imputação multivariada:
+
+```python
+mapeamento_idade = {
+    '25-34': 30, '35-44': 40, '45-54': 50, '55-64': 60,
+    '65-74': 70, '>74': 80, '<25': 20
+}
+```
+
+## 4. Tratamento de valores ausentes
+
+Foi adotada uma estratégia híbrida, com diferentes técnicas conforme a natureza e a importância da variável.
+
+### 4.1 Imputação simples (mediana e moda)
+
+Para variáveis com baixa proporção de valores ausentes e papel secundário no modelo, aplicou-se imputação direta:
+
+- **Mediana** para variáveis numéricas (`term`) — escolhida em vez da média por sua robustez a outliers.
+- **Moda** para variáveis categóricas (`loan_limit`, `approv_in_adv`, `loan_purpose`, `Neg_ammortization`, `age`, `submission_of_application`).
+
+### 4.2 Imputação multivariada com MICE
+
+Para as variáveis numéricas com maior peso preditivo e maior quantidade de nulos (`loan_amount`, `income`, `dtir1`, `Credit_Score`), foi aplicada a técnica **MICE (Multiple Imputation by Chained Equations)** através do `IterativeImputer` do scikit-learn, utilizando um `RandomForestRegressor` como estimador base:
+
+```python
+imputer = IterativeImputer(
+    estimator=RandomForestRegressor(n_estimators=10, n_jobs=-1, random_state=42),
+    max_iter=5,
+    random_state=42
+)
+```
+
+A escolha do MICE com Random Forest foi justificada por três motivos:
+
+1. **Preserva a estrutura multivariada dos dados:** ao imputar uma variável com base nas demais, mantém-se a coerência entre `income`, `loan_amount`, `Credit_Score` e `dtir1`, evitando o achatamento da variância gerado por imputações simples.
+2. **Captura relações não lineares:** o uso do Random Forest como estimador permite modelar interações complexas entre variáveis, mais aderentes ao comportamento real dos dados financeiros.
+3. **Coerência metodológica:** alinha-se ao algoritmo escolhido para a classificação final.
+
+### 4.3 Validação pós-imputação
+
+Após o MICE, foi feita uma análise de variância para garantir que a imputação **não tivesse achatado a distribuição** das variáveis críticas. O Coeficiente de Variação (CV) de `income` e `dtir1` foi calculado e comparado com as estatísticas pré-imputação:
+
+```python
+cv_income = (df_final['income'].std() / df_final['income'].mean()) * 100
+cv_dtir = (df_final['dtir1'].std() / df_final['dtir1'].mean()) * 100
+```
+
+Adicionalmente, gráficos de densidade (KDE) por status (adimplente vs. inadimplente) foram gerados para confirmar que a imputação preservou a separação entre as classes.
+
+## 5. Codificação de variáveis categóricas
+
+As variáveis categóricas (`Gender`, `Region`, `loan_purpose`, `loan_type`, `occupancy_type`, `credit_type`, entre outras) foram convertidas para representação numérica via **One-Hot Encoding**, utilizando `pd.get_dummies`:
+
+```python
+X = pd.get_dummies(X)
+```
+
+Em iterações posteriores, optou-se pelo parâmetro `drop_first=True` para evitar a armadilha da multicolinearidade (variável fictícia redundante):
+
+```python
+X_encoded = pd.get_dummies(X_puro, drop_first=True)
+```
+
+A escolha do One-Hot foi adequada porque as variáveis categóricas do dataset são, em sua maioria, **nominais** (sem ordem natural), e o Random Forest não exige ordinalidade nem normalização das colunas resultantes.
+
+## 6. Sobre normalização e padronização
+
+**Não foi aplicada normalização ou padronização** das variáveis numéricas. Essa decisão é metodologicamente correta: algoritmos baseados em árvores, como o Random Forest, são **invariantes a transformações monotônicas de escala**. Como as divisões dos nós são feitas com base em pontos de corte de cada variável individualmente, escalar `income` ou `loan_amount` não altera as previsões. Aplicar normalização aqui seria um passo desnecessário, que apenas adicionaria complexidade ao pipeline.
+
+## 7. Separação dos dados em treino e teste
+
+A base final foi dividida em conjuntos de treino e teste utilizando `train_test_split` do scikit-learn, com as seguintes configurações:
+
+```python
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+```
+
+Justificativa dos parâmetros:
+
+- **`test_size=0.2`:** divisão clássica 80/20, equilibrando volume de treino e representatividade do teste.
+- **`random_state=42`:** garante reprodutibilidade entre execuções.
+- **`stratify=y`:** parâmetro **fundamental no contexto de inadimplência**, pois preserva a proporção original entre adimplentes e inadimplentes nos dois subconjuntos. Sem essa estratificação, há risco de o conjunto de teste ficar com proporção distinta da classe minoritária, comprometendo a avaliação.
+
+## 8. Seleção de features
+
+A seleção de features foi conduzida de forma iterativa, baseada na análise de `feature_importances_` do Random Forest. A partir dos resultados do modelo baseline, duas variáveis foram identificadas como problemáticas e removidas em testes subsequentes:
+
+- **`credit_type`:** dominava a importância de previsão de forma desproporcional, sugerindo _data leakage_ (carregava informação derivada do próprio histórico de inadimplência).
+- **`processo_interrompido`:** apesar de criada com intenção legítima na engenharia de atributos, representava informação posterior ao momento da concessão do crédito, configurando vazamento temporal.
+
+Os experimentos com diferentes combinações de variáveis estão documentados na seção "Descrição do modelo".
+
+## Resumo do pipeline de preparação
+
+O fluxo final de preparação dos dados pode ser resumido nas seguintes etapas sequenciais:
+
+1. Diagnóstico de nulos e análise de seu significado em relação à inadimplência;
+2. Filtragem de inconsistências (`income <= 0`, `dtir1 < 0`);
+3. Criação da feature `processo_interrompido` e mapeamento numérico de `age`;
+4. Imputação simples (mediana/moda) para variáveis secundárias;
+5. Imputação multivariada (MICE com Random Forest) para variáveis críticas;
+6. Validação da preservação da variância pós-imputação;
+7. Codificação one-hot das variáveis categóricas;
+8. Separação treino/teste estratificada (80/20);
+9. Seleção iterativa de features baseada em feature importance.
 
 
 
