@@ -36,6 +36,16 @@ Explore aspectos específicos, como o ajuste dos parâmetros livres do algoritmo
 
 ## Métricas utilizadas
 
+A avaliação do modelo foi conduzida utilizando um conjunto de métricas extraídas da Matriz de Confusão, fundamentais para problemas de classificação, especialmente em cenários onde as classes podem apresentar desbalanceamento (típico em bases de crédito). As métricas escolhidas e suas justificativas são
+
+* **Precisão (Precision):** Mede a proporção de verdadeiros positivos em relação a todas as predições positivas feitas pelo modelo. Foi uma escolha essencial porque, no contexto do negócio, o custo de um Falso Positivo (classificar um bom cliente como inadimplente) é altíssimo, podendo gerar atritos, cobranças indevidas e a perda do cliente.
+
+* **Recall / Revocação (Sensibilidade):** Avalia a proporção de casos positivos reais que o modelo conseguiu identificar corretamente. Esta métrica foi crucial para acompanhar a classe dos Adimplentes (Status 0), garantindo que a base de bons clientes fosse corretamente rastreada e preservada.
+
+* **F1-Score:** Sendo a média harmônica entre a Precisão e o Recall, esta métrica foi utilizada para fornecer uma visão única do desempenho do modelo em cada classe, penalizando modelos que tenham uma disparidade muito grande entre Precisão e Recall.
+
+* **Acurácia (Accuracy):** Utilizada como uma métrica de apoio para entender o percentual de acertos globais do modelo (soma dos verdadeiros positivos e verdadeiros negativos sobre o total), embora a tomada de decisão principal tenha se apoiado na Precisão e no Recall.
+
 Nesta seção, as métricas utilizadas para avaliar os modelos desenvolvidos deverão ser apresentadas (p. ex.: acurácia, precisão, recall, F1-Score, MSE etc.). A escolha de cada métrica deverá ser justificada, pois esta escolha é essencial para avaliar de forma mais assertiva a qualidade do modelo construído. 
 
 ## Discussão dos resultados obtidos
