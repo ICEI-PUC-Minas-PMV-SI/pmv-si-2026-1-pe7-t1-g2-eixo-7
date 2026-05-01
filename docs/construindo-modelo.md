@@ -28,9 +28,67 @@ Avalie quais etapas são importantes para o contexto dos dados que você está t
 
 # Descrição do modelo
 
-Nesta seção, conhecendo os dados e de posse dos dados preparados, é hora de descrever o algoritmo de aprendizado de máquina selecionado para a construção do modelo proposto. Inclua informações abrangentes sobre o algoritmo implementado, aborde conceitos fundamentais, princípios de funcionamento, vantagens/limitações e justifique a escolha do algoritmo utilizado. 
+# Descrição do modelo
 
-Explore aspectos específicos, como o ajuste dos parâmetros livres do algoritmo. Lembre-se de experimentar parâmetros diferentes e principalmente, de registrar os testes realizados com diferentes parâmetros que servirão para justificar as escolhas realizadas.
+O algoritmo escolhido para a criação do modelo foi o random forest. Ele opera construindo um conjunto de árvores de decisão durante o treinamento e combina cada previsão para gerar uma previsão final mais robusta. Para problemas de classificação, como o de inadimplência, a saída do modelo corresponde à classe mais votada pelas árvores.
+
+## Justificativa
+
+A escolha foi motivada pelos seguintes pontos:
+
+**Adequação ao tipo de dado:** o dataset de empréstimos é composto por dados tabulares mistos, tendo variáveis numéricas como loan_amount e income e variáveis categóricas, como region e gender. Esse algoritmo lida bem com essa heterogeneidade, sem necessidade de normalizar ou padronizar as variáveis numéricas.
+
+**Robustez a outliers e ruído:** as análises exploratórias feitas usando boxplots de LTV, DTI e valor de empréstimo revelaram a existência de outliers, presente principalmente em variáveis financeiras. Tendo em vista que o random forest opera por divisões binárias baseadas em valores de corte, ele lida melhor com valores extremos do que modelos lineares.
+
+**Capacidade de capturar relações não lineares e interações:** a análise de correlação de Pearson realizada mostrou que as variáveis individualmente apresentam correlação fraca com o status (a maior foi o LTV com r ≈ 0,13). Isso sugere que a inadimplência depende de fatores mais complexas entre variáveis (alto LTV combinado com baixo Credit Score e alto DTI, por exemplo), padrões que árvores conseguem capturar naturalmente.
+
+**Interpretabilidade via feature importance:** mesmo sendo um modelo _ensemble_, ele fornece o atributo feature*importances*, que foi importante para identificar variáveis com sinais de vazamento de informação, como o credit_type.
+
+## Configuração e ajuste dos hiperparâmetros
+
+O modelo foi configurado com os seguintes parâmetros base:
+
+```python
+RandomForestClassifier(
+    n_estimators=100,
+    random_state=42,
+    n_jobs=-1
+)
+```
+
+- **`n_estimators=100`**: define o número de árvores na floresta. O valor 100 representa um equilíbrio consolidado na literatura entre estabilidade das previsões e custo computacional. Um número maior tende a estabilizar a métrica, mas com retorno decrescente.
+- **`random_state=42`**: fixa a semente aleatória para garantir reprodutibilidade dos resultados entre execuções, condição fundamental para comparar diferentes configurações experimentais.
+- **`n_jobs=-1`**: utiliza todos os núcleos disponíveis do processador para paralelizar o treinamento das árvores, reduzindo o tempo de execução.
+
+Os demais hiperparâmetros foram mantidos no padrão do scikit-learn (`max_depth=None`, `min_samples_split=2`, `min_samples_leaf=1`, `max_features='sqrt'`, `criterion='gini'`), permitindo que as árvores cresçam até alcançar pureza máxima nos nós folha. Essa configuração maximiza a capacidade de ajuste, ficando a regularização por conta da diversidade entre as árvores.
+
+## Registro dos testes realizados
+
+Foram executados quatro experimentos com configurações distintas do conjunto de variáveis preditoras, mantendo os mesmos hiperparâmetros do modelo. O objetivo foi avaliar o impacto da remoção de variáveis suspeitas de causar _data leakage_ (vazamento de informação do alvo para as features).
+
+| Experimento                                 | Variáveis removidas                              | Justificativa                                                                                                                                                                                                                                                        |
+| ------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 — Modelo completo (`rf_model`)            | Apenas `Status` (alvo)                           | Baseline com todas as features disponíveis.                                                                                                                                                                                                                          |
+| 2 — Sem `credit_type` (`rf_realista`)       | `Status`, `credit_type`                          | A análise de feature importance no baseline revelou que `credit_type` dominava a previsão de forma desproporcional, sugerindo que esta variável carregava informação derivada do próprio histórico de inadimplência (_data leakage_).                                |
+| 3 — Sem `processo_interrompido` (`rf_puro`) | `Status`, `processo_interrompido`                | A variável foi criada artificialmente durante o pré-processamento como flag de "processo com dados faltantes". Por estar fortemente correlacionada com inadimplência observada nas análises iniciais, configurava-se como informação posterior à decisão de crédito. |
+| 4 — Sem ambas                               | `Status`, `credit_type`, `processo_interrompido` | Avaliação do desempenho real do modelo apenas com variáveis legitimamente disponíveis no momento da concessão do crédito.                                                                                                                                            |
+
+A comparação dos relatórios de classificação (`classification_report`) entre os experimentos permitiu observar a queda esperada de métricas como precisão e recall ao remover as variáveis com leakage, o que confirma que parte do desempenho do baseline era artificial. O modelo do Experimento 4 representa, portanto, a versão mais honesta e generalizável do classificador, sendo a recomendada para aplicação prática.
+
+## Vantagens observadas
+
+- Bom desempenho com pouco ajuste de hiperparâmetros (configuração padrão já entregou métricas competitivas);
+- Treinamento paralelizável (`n_jobs=-1`), aproveitando múltiplos núcleos de CPU;
+- Geração nativa de ranking de importância das variáveis;
+- Resistência ao overfitting comparado a uma árvore de decisão isolada.
+
+## Desvantagens observadas
+
+- **Tendência a favorecer a classe majoritária:** dado o desbalanceamento entre adimplentes (Status=0) e inadimplentes (Status=1) presente no dataset, o modelo tende a apresentar recall baixo para a classe minoritária (inadimplentes), que é justamente a classe de maior interesse no problema de negócio.
+- **Custo computacional:** com 100 árvores e o volume de dados após o MICE, o tempo de treinamento é mais alto que o de modelos mais simples.
+- **Menor interpretabilidade individual:** apesar do `feature_importances_`, não é possível extrair regras explícitas como em uma única árvore de decisão.
+- **Possibilidade de viés em variáveis categóricas com muitos níveis:** após `pd.get_dummies`, o conjunto `X` passou a ter um número alto de colunas, e variáveis com muitas categorias podem inflar artificialmente sua importância.
+
 
 # Avaliação dos modelos criados
 
