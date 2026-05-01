@@ -46,9 +46,21 @@ A avaliação do modelo foi conduzida utilizando um conjunto de métricas extra�
 
 * **Acurácia (Accuracy):** Utilizada como uma métrica de apoio para entender o percentual de acertos globais do modelo (soma dos verdadeiros positivos e verdadeiros negativos sobre o total), embora a tomada de decisão principal tenha se apoiado na Precisão e no Recall.
 
+  
+
 Nesta seção, as métricas utilizadas para avaliar os modelos desenvolvidos deverão ser apresentadas (p. ex.: acurácia, precisão, recall, F1-Score, MSE etc.). A escolha de cada métrica deverá ser justificada, pois esta escolha é essencial para avaliar de forma mais assertiva a qualidade do modelo construído. 
 
 ## Discussão dos resultados obtidos
+
+Os resultados obtidos pelo modelo demonstram um alinhamento excepcional com a questão de pesquisa e com os objetivos estratégicos de negócio previamente propostos. O problema central consistia em identificar o risco de crédito sem que ações de cobrança agressivas ou negativas de crédito prejudicassem a experiência dos bons clientes (Adimplentes - Status 0).
+
+Avaliando a qualidade do modelo pelas métricas, observa-se que a **Precisão para a classe de Inadimplentes (Status 1) foi de 0.91 (91%)**. Isso "conta" que, em 91% das vezes que o modelo aponta um cliente como mau pagador, ele está absolutamente correto. Consequentemente, a taxa de erro que resultaria em incomodar ou negar crédito a um "bom cliente" por engano é de apenas 9%, cumprindo com rigor a diretriz conservadora do negócio.
+
+Adicionalmente, o modelo apresentou um **Recall de 0.98 (98%) para a classe de Adimplentes (Status 0).** Na prática, isso atesta que o sistema consegue identificar e proteger 98% da base de bons pagadores reais.
+
+Como inerente a qualquer modelo de Machine Learning, existe um trade-off. Para atingir essa altíssima proteção aos bons clientes, o modelo assume uma postura mais branda nas predições de risco, o que se refletiu em um **Recall de 0.55 (55%) para a classe 1**. Isso indica que aproximadamente 45% dos inadimplentes reais não estão sendo bloqueados. Contudo, dentro do contexto prático em que os dados se inserem, este é um custo aceito (e planejado) pela estratégia de negócio: prefere-se deixar passar alguns maus pagadores a correr o risco de afastar clientes valiosos. O modelo desenvolvido é, portanto, altamente assertivo e cumpre com eficácia o seu papel estratégico.
+
+
 
 Nesta seção, discuta os resultados obtidos pelo modelo construído, no contexto prático em que os dados se inserem, promovendo uma compreensão abrangente e aprofundada da qualidade dele. Lembre-se de relacionar os resultados obtidos por cada uma das métricas ao problema identificado, a questão de pesquisa levantada e estabelecer relação com os objetivos previamente propostos. 
 É fundamental compreender o que cada uma das métricas "conta" sobre a qualidade do modelo desenvolvido.
