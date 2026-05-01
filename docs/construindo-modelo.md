@@ -26,13 +26,13 @@ Algumas das etapas podem estar relacionadas à:
 
 Avalie quais etapas são importantes para o contexto dos dados que você está trabalhando, pois a qualidade dos dados e a eficácia do pré-processamento desempenham um papel fundamental no sucesso de modelo(s) de aprendizado de máquina. É importante entender o contexto do problema e ajustar as etapas de preparação de dados de acordo com as necessidades específicas de cada projeto.
 
-# Descrição do modelo
+
 
 # Descrição do modelo
 
 O algoritmo escolhido para a criação do modelo foi o random forest. Ele opera construindo um conjunto de árvores de decisão durante o treinamento e combina cada previsão para gerar uma previsão final mais robusta. Para problemas de classificação, como o de inadimplência, a saída do modelo corresponde à classe mais votada pelas árvores.
 
-## Justificativa
+### Justificativa
 
 A escolha foi motivada pelos seguintes pontos:
 
@@ -44,7 +44,7 @@ A escolha foi motivada pelos seguintes pontos:
 
 **Interpretabilidade via feature importance:** mesmo sendo um modelo _ensemble_, ele fornece o atributo feature*importances*, que foi importante para identificar variáveis com sinais de vazamento de informação, como o credit_type.
 
-## Configuração e ajuste dos hiperparâmetros
+### Configuração e ajuste dos hiperparâmetros
 
 O modelo foi configurado com os seguintes parâmetros base:
 
@@ -62,7 +62,7 @@ RandomForestClassifier(
 
 Os demais hiperparâmetros foram mantidos no padrão do scikit-learn (`max_depth=None`, `min_samples_split=2`, `min_samples_leaf=1`, `max_features='sqrt'`, `criterion='gini'`), permitindo que as árvores cresçam até alcançar pureza máxima nos nós folha. Essa configuração maximiza a capacidade de ajuste, ficando a regularização por conta da diversidade entre as árvores.
 
-## Registro dos testes realizados
+### Testes realizados
 
 Foram executados quatro experimentos com configurações distintas do conjunto de variáveis preditoras, mantendo os mesmos hiperparâmetros do modelo. O objetivo foi avaliar o impacto da remoção de variáveis suspeitas de causar _data leakage_ (vazamento de informação do alvo para as features).
 
@@ -75,14 +75,14 @@ Foram executados quatro experimentos com configurações distintas do conjunto d
 
 A comparação dos relatórios de classificação (`classification_report`) entre os experimentos permitiu observar a queda esperada de métricas como precisão e recall ao remover as variáveis com leakage, o que confirma que parte do desempenho do baseline era artificial. O modelo do Experimento 4 representa, portanto, a versão mais honesta e generalizável do classificador, sendo a recomendada para aplicação prática.
 
-## Vantagens observadas
+### Vantagens observadas
 
 - Bom desempenho com pouco ajuste de hiperparâmetros (configuração padrão já entregou métricas competitivas);
 - Treinamento paralelizável (`n_jobs=-1`), aproveitando múltiplos núcleos de CPU;
 - Geração nativa de ranking de importância das variáveis;
 - Resistência ao overfitting comparado a uma árvore de decisão isolada.
 
-## Desvantagens observadas
+### Desvantagens observadas
 
 - **Tendência a favorecer a classe majoritária:** dado o desbalanceamento entre adimplentes (Status=0) e inadimplentes (Status=1) presente no dataset, o modelo tende a apresentar recall baixo para a classe minoritária (inadimplentes), que é justamente a classe de maior interesse no problema de negócio.
 - **Custo computacional:** com 100 árvores e o volume de dados após o MICE, o tempo de treinamento é mais alto que o de modelos mais simples.
