@@ -328,7 +328,7 @@ df[df['Gender'].isin(['Male','Female'])].groupby('Gender')['Credit_Score'].agg([
 
 ```python
 
-df[df['age'].isin(age_order)].groupby('age')['Status'].mean().reindex(age_order) \* 100
+df[df['age'].isin(age_order)].groupby('age')['Status'].mean().reindex(age_order) * 100
 
 # <25 28.95%
 
@@ -358,7 +358,7 @@ df[df['age'].isin(age_order)].groupby('age')['Status'].mean().reindex(age_order)
 
 ```python
 
-df.groupby('interest_only')['Status'].mean() \* 100
+df.groupby('interest_only')['Status'].mean() * 100
 
 # int_only 27.31%
 
