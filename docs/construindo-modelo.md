@@ -73,7 +73,7 @@ Para as variáveis numéricas com maior peso preditivo e maior quantidade de nul
 ```python
 imputer = IterativeImputer(
     estimator=RandomForestRegressor(n_estimators=10, n_jobs=-1, random_state=42),
-    max_iter=5,
+    max_iter=8,
     random_state=42
 )
 ```
@@ -133,12 +133,10 @@ Justificativa dos parâmetros:
 
 ## 8. Seleção de features
 
-A seleção de features foi conduzida de forma iterativa, baseada na análise de `feature_importances_` do Random Forest. A partir dos resultados do modelo baseline, duas variáveis foram identificadas como problemáticas e removidas em testes subsequentes:
+A seleção de features foi conduzida de forma iterativa, baseada na análise de `feature_importances_` do Random Forest. A partir dos resultados do modelo baseline, uma variável foram identificadas como problemáticas e removidas em testes subsequentes:
 
-- **`credit_type`:** dominava a importância de previsão de forma desproporcional, sugerindo _data leakage_ (carregava informação derivada do próprio histórico de inadimplência).
-- **`processo_interrompido`:** apesar de criada com intenção legítima na engenharia de atributos, representava informação posterior ao momento da concessão do crédito, configurando vazamento temporal.
+- **`processo_interrompido`:** apesar de criada com intenção legítima na engenharia de atributos, representava informação posterior ao momento da concessão do crédito, configurando vazamento temporal, informações essas de features ausentes como rate_of_interest, property_value e LTV que tinha sua totalidade de omissão relacionada ao alvo em questão .
 
-Os experimentos com diferentes combinações de variáveis estão documentados na seção "Descrição do modelo".
 
 ## Resumo do pipeline de preparação
 
@@ -148,7 +146,7 @@ O fluxo final de preparação dos dados pode ser resumido nas seguintes etapas s
 2. Filtragem de inconsistências (`income <= 0`, `dtir1 < 0`);
 3. Criação da feature `processo_interrompido` e mapeamento numérico de `age`;
 4. Imputação simples (mediana/moda) para variáveis secundárias;
-5. Imputação multivariada (MICE com Random Forest) para variáveis críticas;
+5. Imputação multivariada (MICE com Random Forest Regressor) para variáveis críticas;
 6. Validação da preservação da variância pós-imputação;
 7. Codificação one-hot das variáveis categóricas;
 8. Separação treino/teste estratificada (80/20);
@@ -170,38 +168,59 @@ A escolha foi motivada pelos seguintes pontos:
 
 **Capacidade de capturar relações não lineares e interações:** a análise de correlação de Pearson realizada mostrou que as variáveis individualmente apresentam correlação fraca com o status (a maior foi o LTV com r ≈ 0,13). Isso sugere que a inadimplência depende de fatores mais complexas entre variáveis (alto LTV combinado com baixo Credit Score e alto DTI, por exemplo), padrões que árvores conseguem capturar naturalmente.
 
-**Interpretabilidade via feature importance:** mesmo sendo um modelo _ensemble_, ele fornece o atributo feature*importances*, que foi importante para identificar variáveis com sinais de vazamento de informação, como o credit_type.
+**Interpretabilidade via feature importance:** mesmo sendo um modelo _ensemble_, ele fornece o atributo feature*importances*, que foi importante para identificar variáveis com sinais de vazamento de informação, como o rate_of_interest, property_value e LTV.
 
 ### Configuração e ajuste dos hiperparâmetros
 
-O modelo foi configurado com os seguintes parâmetros base:
+O modelo foi configurado utilizando como base de testes o RandomizedSearchCV com uma grade definida afim de encontrar a otimização entre estabilidade preditiva e custo computacional com os seguintes parâmetros base:
 
 ```python
-RandomForestClassifier(
-    n_estimators=100,
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    
+    'n_estimators': [100, 200, 500],
+    'max_depth': [10, 20, 30, None],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4],
+    'criterion': ['gini', 'entropy'],
+    'class_weight': ['balanced', 'balanced_subsample', None]
+}
+```
+Após a definição do grid de testes foi realizado a configuração da busca pelo melhores parâmetros focando na melhora do f1-score buscando um equilíbrio entre precision e recall
+
+```python
+rf_search = RandomizedSearchCV(
+    estimator=RandomForestClassifier(random_state=42, n_jobs=-1),
+    param_distributions=param_grid,
+    n_iter=20,           
+    cv=3,                
+    scoring='f1',       
+    verbose=2,
     random_state=42,
     n_jobs=-1
 )
 ```
+como resultado dessa busca foi encontrado os parâmetros mais otimizados para um modelo que visa o equilíbrio sendo eles: 'n_estimators': 200, 'min_samples_split': 10, 'min_samples_leaf': 1, 'max_depth': 30, 'criterion': 'gini', 'class_weight': 'balanced_subsample'
 
-- **`n_estimators=100`**: define o número de árvores na floresta. O valor 100 representa um equilíbrio consolidado na literatura entre estabilidade das previsões e custo computacional. Um número maior tende a estabilizar a métrica, mas com retorno decrescente.
-- **`random_state=42`**: fixa a semente aleatória para garantir reprodutibilidade dos resultados entre execuções, condição fundamental para comparar diferentes configurações experimentais.
-- **`n_jobs=-1`**: utiliza todos os núcleos disponíveis do processador para paralelizar o treinamento das árvores, reduzindo o tempo de execução.
-
-Os demais hiperparâmetros foram mantidos no padrão do scikit-learn (`max_depth=None`, `min_samples_split=2`, `min_samples_leaf=1`, `max_features='sqrt'`, `criterion='gini'`), permitindo que as árvores cresçam até alcançar pureza máxima nos nós folha. Essa configuração maximiza a capacidade de ajuste, ficando a regularização por conta da diversidade entre as árvores.
+- **`n_estimators=200`**: define o número de árvores na floresta. O valor 200 pode oferecer maior estabilidade preditiva e redução do erro em um dataset com um grande volume de dados pode trazer um equilíbrio centre estabilidade das previsões e custo computacional.
+- **`max_depth: 30`**: Determina a profundidade máxima que cada árvore pode crescer. O limite de 30 níveis permite que o modelo aprenda relações financeiras complexas entre variáveis (como renda e taxa de dívida), mas impede que a árvore cresça indefinidamente. Isso é fundamental para evitar o overfitting
+- **`min_samples_split: 10`**: É o número mínimo de registros necessários em um nó para que o modelo decida realizar uma nova divisão. Ao exigir pelo menos 10 clientes para criar uma regra, o modelo ignora ruídos e variações pequenas de dados. Isso força a floresta a focar em padrões estatísticos reais e robustos.
+- **`class_weight: 'balanced_subsample'`**: Ajusta o peso atribuído a cada classe para lidar com dados desbalanceados como é o caso deste dataset que há menos inadimplentes do que pagadores
+- **`min_samples_leaf: 1'`**:O número mínimo de amostras que deve sobrar em cada ponto final da árvore. O valor 1 na folha permite que o modelo aproveite ao máximo a profundidade de 30 níveis para refinar a classificação final.
 
 ### Testes realizados
 
 Foram executados quatro experimentos com configurações distintas do conjunto de variáveis preditoras, mantendo os mesmos hiperparâmetros do modelo. O objetivo foi avaliar o impacto da remoção de variáveis suspeitas de causar _data leakage_ (vazamento de informação do alvo para as features).
 
-| Experimento                                 | Variáveis removidas                              | Justificativa                                                                                                                                                                                                                                                        |
-| ------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 — Modelo completo (`rf_model`)            | Apenas `Status` (alvo)                           | Baseline com todas as features disponíveis.                                                                                                                                                                                                                          |
-| 2 — Sem `credit_type` (`rf_realista`)       | `Status`, `credit_type`                          | A análise de feature importance no baseline revelou que `credit_type` dominava a previsão de forma desproporcional, sugerindo que esta variável carregava informação derivada do próprio histórico de inadimplência (_data leakage_).                                |
-| 3 — Sem `processo_interrompido` (`rf_puro`) | `Status`, `processo_interrompido`                | A variável foi criada artificialmente durante o pré-processamento como flag de "processo com dados faltantes". Por estar fortemente correlacionada com inadimplência observada nas análises iniciais, configurava-se como informação posterior à decisão de crédito. |
-| 4 — Sem ambas                               | `Status`, `credit_type`, `processo_interrompido` | Avaliação do desempenho real do modelo apenas com variáveis legitimamente disponíveis no momento da concessão do crédito.                                                                                                                                            |
+| Experimento                                 | Variáveis/Parâmetros alterados                             |
+| ------------------------------------------- | ------------------------------------------------ | 
+| 1 — Modelo inicial            | Apenas `Status`,'processo interrompido' (alvo) removido                          |                                                                                                                                                                                                                          
+| 2 — Modelo focado no F1-Score     | `Status`, 'processo interrompido' sendo removido, com os hiperparâmetros sendo n_estimators=200, min_samples_split=10, min_samples_leaf=1, max_depth=30, criterion='gini', class_weight='balanced_subsample'.                   |
+| 3 —Modelo focado na precisão | `Status`, `processo_interrompido` sendo removido,  _estimators=200, min_samples_split=10, min_samples_leaf=2, max_depth=10, criterion='gini', class_weight=None,               |
+| 4 — Modelo focado no Recall                              |  `Status`, 'processo interrompido' sendo removido, com os hiperparâmetros sendo n_estimators=200, min_samples_split=5, min_samples_leaf=1, max_depth=10, criterion='gini', class_weight='balanced_subsample'.      |
 
-A comparação dos relatórios de classificação (`classification_report`) entre os experimentos permitiu observar a queda esperada de métricas como precisão e recall ao remover as variáveis com leakage, o que confirma que parte do desempenho do baseline era artificial. O modelo do Experimento 4 representa, portanto, a versão mais honesta e generalizável do classificador, sendo a recomendada para aplicação prática.
+Analisando a necessidade do banco de manter uma boa relação entre a captação de clientes pagantes e a detecção de clientes inadimplentes (que geram prejuízo), escolheu-se o modelo focado no equilíbrio, o Modelo 2, orientado pelo F1-Score. A escolha justifica-se pois, ao focar exclusivamente no parâmetro Recall, embora ocorra um aumento na detecção de inadimplentes, o alto índice de falsos positivos gera insegurança e pode afastar bons clientes do banco. Por outro lado, caso fosse escolhido um modelo focado apenas em Precisão, o banco acabaria aceitando muitos clientes inadimplentes, o que traria um prejuízo financeiro superior à vantagem de atrair novos clientes pagantes.
 
 ### Vantagens observadas
 
@@ -238,13 +257,27 @@ Nesta seção, as métricas utilizadas para avaliar os modelos desenvolvidos dev
 
 ## Discussão dos resultados obtidos
 
-Os resultados obtidos pelo modelo demonstram um alinhamento excepcional com a questão de pesquisa e com os objetivos estratégicos de negócio previamente propostos. O problema central consistia em identificar o risco de crédito sem que ações de cobrança agressivas ou negativas de crédito prejudicassem a experiência dos bons clientes (Adimplentes - Status 0).
+Os resultados obtidos pelo modelo final demonstram um alinhamento com os objetivos de negócio, adotando uma postura de equilíbrio entre a proteção do capital e a experiência do cliente. O modelo, otimizado via RandomizedSearchCV com foco no F1-Score, estabelece uma régua de crédito eficiente para um banco conservador.
 
-Avaliando a qualidade do modelo pelas métricas, observa-se que a **Precisão para a classe de Inadimplentes (Status 1) foi de 0.91 (91%)**. Isso "conta" que, em 91% das vezes que o modelo aponta um cliente como mau pagador, ele está absolutamente correto. Consequentemente, a taxa de erro que resultaria em incomodar ou negar crédito a um "bom cliente" por engano é de apenas 9%, cumprindo com rigor a diretriz conservadora do negócio.
+* **Análise das Métricas**
 
-Adicionalmente, o modelo apresentou um **Recall de 0.98 (98%) para a classe de Adimplentes (Status 0).** Na prática, isso atesta que o sistema consegue identificar e proteger 98% da base de bons pagadores reais.
+* Recall de Inadimplentes (0.60): O modelo demonstra uma capacidade moderada de detectar inadimplência, identificando e bloqueando 60% dos inadimplentes reais. Em termos absolutos, para um universo de 150.000 clientes, isso representa a detecção eficaz de 21.600 potenciais calotes.
 
-Como inerente a qualquer modelo de Machine Learning, existe um trade-off. Para atingir essa altíssima proteção aos bons clientes, o modelo assume uma postura mais branda nas predições de risco, o que se refletiu em um **Recall de 0.55 (55%) para a classe 1**. Isso indica que aproximadamente 45% dos inadimplentes reais não estão sendo bloqueados. Contudo, dentro do contexto prático em que os dados se inserem, este é um custo aceito (e planejado) pela estratégia de negócio: prefere-se deixar passar alguns maus pagadores a correr o risco de afastar clientes valiosos. O modelo desenvolvido é, portanto, altamente assertivo e cumpre com eficácia o seu papel estratégico.
+* Precisão de Inadimplentes (0.84): A assertividade do modelo é alta; em 84% das vezes que o sistema emite um alerta de risco, o cliente é de fato um caso de inadimplência. 
+
+* Recall de Adimplentes (0.96): O sistema atua com rigor na proteção dos bons pagadores, identificando corretamente 96% da base adimplente. Isso cumpre o objetivo estratégico de evitar que clientes pagantes sejam injustamente barrados por erros do sistema.
+
+* F1-Score (0.70): Esta métrica consolida o sucesso do modelo em harmonizar a necessidade de capturar inadimplentes com a precisão das decisões.
+
+* **Importância das Variáveis**:
+
+* credit_type_EQUI (27.87%): Esta variável destaca-se como o principal indicador de risco. Sua alta importância sugere que o bureau de crédito Equifax atua como um filtro crítico na segmentação de perfis com maior propensão histórica à inadimplência.
+
+* Fundamentos Financeiros (dtir1 e income): A relação dívida/renda (dtir1) com 11.56% e a renda (income) com 9.85% aparecem logo em seguida. Isso demonstra que o modelo toma decisões baseadas na capacidade real de pagamento do cliente, um pilar fundamental para o banco.
+
+* Histórico e Montante (Credit_Score e loan_amount): O score de crédito (7.88%) e o valor do empréstimo (7.67%) completam o topo da pirâmide de decisão, garantindo que o comportamento passado e a exposição financeira atual sejam pesados de forma equilibrada.
+
+É possível que a ausência de dados em colunas críticas tenha impactado negativamente o desempenho do modelo, especialmente na identificação de inadimplentes. Variáveis como rate_of_interest, property_value e LTV apresentam uma concentração de valores nulos extremamente alta entre os casos de inadimplência (Status 1), chegando a 100% e 99,99% em alguns campos. Como essas colunas são fundamentais para o cálculo do risco financeiro, a falta dessas informações limita a capacidade do algoritmo de aprender os padrões específicos dos clientes que deixam de pagar. Na prática, essa lacuna de dados reflete-se diretamente no parâmetro de Recall do Status 1, que poderia ser superior caso o modelo tivesse acesso a esses indicadores financeiros para mapear com maior precisão o perfil de risco desses clientes.
 
 
 
