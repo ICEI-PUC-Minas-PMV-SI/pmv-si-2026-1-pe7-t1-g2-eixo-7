@@ -378,9 +378,7 @@ Para uma visão integrada das relações lineares entre todas as variáveis num�
 
 ```python
 
-num_cols = ['loan_amount','rate_of_interest','Upfront_charges','property_value',
-
-'income','Credit_Score','LTV','dtir1','term','Status']
+num_cols = ['loan_amount','rate_of_interest','Upfront_charges','property_value','income','Credit_Score','LTV','dtir1','term','Status']
 
 corr = df[num_cols].corr(method='pearson')
 
