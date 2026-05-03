@@ -251,9 +251,6 @@ A avaliação do modelo foi conduzida utilizando um conjunto de métricas extra�
 
 * **Acurácia (Accuracy):** Utilizada como uma métrica de apoio para entender o percentual de acertos globais do modelo (soma dos verdadeiros positivos e verdadeiros negativos sobre o total), embora a tomada de decisão principal tenha se apoiado na Precisão e no Recall.
 
-  
-
-Nesta seção, as métricas utilizadas para avaliar os modelos desenvolvidos deverão ser apresentadas (p. ex.: acurácia, precisão, recall, F1-Score, MSE etc.). A escolha de cada métrica deverá ser justificada, pois esta escolha é essencial para avaliar de forma mais assertiva a qualidade do modelo construído. 
 
 ## Discussão dos resultados obtidos
 
