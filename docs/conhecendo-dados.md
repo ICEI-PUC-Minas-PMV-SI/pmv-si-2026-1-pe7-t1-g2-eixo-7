@@ -54,7 +54,7 @@ Observa-se uma diferença entre os grupos.
 
 - **Distribuição:** A média geral é de R$ 327.755, mas a mediana é de R$ 296.500, indicando uma assimetria positiva (alguns empréstimos de valor muito alto elevam a média acima da mediana).
 
-- **Diferença por Status::** \* Status 0 (Adimplentes): Mediana de R$ 306.500.
+- **Diferença por Status:** Status 0 (Adimplentes): Mediana de R$ 306.500.
 
 - Status 1 (Inadimplentes): Mediana de R$ 266.500.
 
