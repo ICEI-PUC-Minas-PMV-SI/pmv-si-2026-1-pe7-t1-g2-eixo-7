@@ -224,17 +224,17 @@ Analisando a necessidade do banco de manter uma boa relação entre a captação
 
 ### Vantagens observadas
 
-- Bom desempenho com pouco ajuste de hiperparâmetros (configuração padrão já entregou métricas competitivas);
+- Flexibilidade no ajuste de hiperparâmetros: o baseline já entregou desempenho competitivo e respondeu bem ao tuning via randomizedSearchCV, permitindo otimizar o modelo para diferentes objetivos (F1, recall ou precisão)
 - Treinamento paralelizável (`n_jobs=-1`), aproveitando múltiplos núcleos de CPU;
 - Geração nativa de ranking de importância das variáveis;
 - Resistência ao overfitting comparado a uma árvore de decisão isolada.
 
 ### Desvantagens observadas
 
-- **Tendência a favorecer a classe majoritária:** dado o desbalanceamento entre adimplentes (Status=0) e inadimplentes (Status=1) presente no dataset, o modelo tende a apresentar recall baixo para a classe minoritária (inadimplentes), que é justamente a classe de maior interesse no problema de negócio.
+- **Tendência inicial a favorecer a classe majoritária**: No baseline, o modelo apresentava recall reduzido para a classe minoritária (inadimplentes), justamente a de maior interesse no negócio. A limitação foi mitigada com class_weight='balanced_subsample', que elevou o recall da classe 1 para 0,60, embora ainda haja trade-off com a precisão.
 - **Custo computacional:** com 100 árvores e o volume de dados após o MICE, o tempo de treinamento é mais alto que o de modelos mais simples.
 - **Menor interpretabilidade individual:** apesar do `feature_importances_`, não é possível extrair regras explícitas como em uma única árvore de decisão.
-- **Possibilidade de viés em variáveis categóricas com muitos níveis:** após `pd.get_dummies`, o conjunto `X` passou a ter um número alto de colunas, e variáveis com muitas categorias podem inflar artificialmente sua importância.
+- **Viés em variáveis categóricas com muitos níveis:** após pd.get_dummies, variáveis com muitos níveis tendem a inflar sua importância. O efeito foi confirmado no modelo final: credit_type_EQUI apareceu como variável mais importante (27,86%), valor desproporcional frente a dtir1 (11,56%) e income (9,85%).
 
 
 # Avaliação dos modelos criados
