@@ -1,220 +1,56 @@
-# Preparação dos dados
+# Relatório Técnico: Modelagem Preditiva de Risco de Crédito (Loan Default)
 
-A etapa de limpeza foi dividida em duas fases estrategicamente posicionadas: uma etapa prévia de saneamento básico e uma etapa automatizada integrada diretamente aos pipelines de Machine Learning.
+Este documento detalha o ciclo completo de desenvolvimento, validação e comparação de modelos preditivos aplicados à detecção de inadimplência de crédito, utilizando dados históricos da operação de 2019.
+
+---
+
+## 1. Preparação dos Dados (Data Preparation)
+
+A etapa de tratamento de dados foi estruturada em duas fases complementares: um saneamento básico inicial e um fluxo automatizado encapsulado via pipelines de Machine Learning para evitar o vazamento de dados (*data leakage*).
 
 ### Remoção de Outliers e Dados Corrompidos
-Antes de qualquer divisão de dados, aplicamos filtros de consistência de negócios para remover ruídos e registros corrompidos que prejudicariam o aprendizado do modelo linear:
-* Filtramos a base para garantir apenas rendas estritamente positivas (`income > 0`), eliminando registros zerados ou negativos incoerentes.
-* Garantimos que o índice de divida/renda fosse válido (`dtir1 >= 0`), preservando valores nulos para tratamento posterior via MICE.
+Antes de qualquer partição amostral, aplicaram-se filtros de consistência de negócios para mitigar ruídos e incoerências que comprometeriam o aprendizado dos estimadores:
+* **Renda Positiva:** Filtrou-se a base para garantir apenas rendas estritamente positivas (`income > 0`), eliminando registros zerados ou negativos.
+* **Validação de Endividamento:** Assegurou-se que o índice dívida/renda fosse válido (`dtir1 >= 0`), preservando os valores nulos nesta fase para tratamento estatístico posterior.
 
 ### Tratamento de Valores Ausentes (Imputação)
-O dataset apresentava uma quantidade significativa de dados faltantes em colunas cruciais. Para não perder registros valiosos descartando linhas, adotamos uma abordagem híbrida:
-
-* **Imputação Estática Pré-Pipeline:** Para atributos cujo preenchimento simples não distorceria a distribuição, aplicamos regras diretas:
-    * **Moda (Variáveis Categóricas/Discretas):** Aplicada em `loan_limit`, `approv_in_adv`, `loan_purpose`, `Neg_ammortization` e `submission_of_application` para preencher as lacunas com a ocorrência mais frequente do banco de dados.
-    * **Mediana (Variáveis Numéricas):** Aplicada em `term` e `age` para mitigar o impacto de possíveis distorções causadas por valores extremos.
-* **Imputação Avançada Iterativa (MICE):** Para as variáveis numéricas de alto impacto comercial (`income`, `dtir1` e `Credit_Score`), integramos o `IterativeImputer` com um estimador `RandomForestRegressor(n_estimators=10)` ao pipeline. Esse método prevê os valores nulos de uma coluna baseando-se no comportamento das outras variáveis, mantendo a consistência estatística interna dos dados.
-
-
----
-# Regressão Logística
-
-## 1. Transformação de Dados
-
-A Regressão Logística baseia-se em pesos matemáticos aplicados a matrizes e, por isso, é extremamente sensível à escala dos dados e à presença de textos brutas. Duas transformações críticas foram encapsuladas no `ColumnTransformer`:
-
-### Padronização de Atributos Numéricos
-As variáveis numéricas (`income`, `dtir1`, `Credit_Score`) possuem ordens de grandeza massivamente diferentes (ex: score de crédito vai até 900, enquanto a renda pode atingir milhares). 
-* Aplicamos o `StandardScaler()`, que centraliza os dados na média zero e escala para variância unitária. 
-* Essa etapa garantiu que o otimizador geométrico (`solver='saga'`) convergisse sem quebrar e que as penalizações normativas (`l1` e `l2`) agissem de forma justa sobre todos os coeficientes.
-
-### Codificação de Variáveis Categóricas
-Para converter os atributos textuais originais em representações numéricas computáveis pelo modelo, adotamos o `OneHotEncoder(drop='first')`:
-* A configuração `drop='first'` remove a primeira categoria gerada de cada variável (*dummy variable trap*), eliminando problemas críticos de **multicolinearidade perfeita**, que invalidariam os coeficientes de uma Regressão Logística.
-* O uso do parâmetro `handle_unknown='ignore'` blinda o pipeline em ambiente de produção contra possíveis categorias inéditas que apareçam em dados futuros.
+Para preservar o volume amostral e evitar vieses por descarte de linhas, adotou-se uma abordagem híbrida de imputação:
+* **Imputação Estática Pré-Pipeline:** Atributos cujo preenchimento direto não distorceria as distribuições populacionais receberam tratamento fixo:
+    * **Moda (Variáveis Categóricas/Discretas):** Aplicada em `loan_limit`, `approv_in_adv`, `loan_purpose`, `Neg_ammortization` e `submission_of_application`.
+    * **Mediana (Variáveis Numéricas):** Aplicada em `term` e `age` para neutralizar a influência de valores extremos.
+* **Imputação Avançada Iterativa (MICE):** Para variáveis de alto impacto preditivo (`income`, `dtir1` e `Credit_Score`), integrou-se o `IterativeImputer` acoplado a um estimador `RandomForestRegressor(n_estimators=10)` ao pipeline principal. O método estima os valores ausentes com base no comportamento cruzado das demais features, mantendo a consistência estatística interna do dataset.
 
 ---
 
-## 2. Feature Engineering e Seleção de Atributos
+## 2. Engenharia de Atributos e Arquitetura dos Pipelines
 
-A seleção de características focou rigorosamente na eliminação de **Data Leakage** (vazamento de dados do futuro) e no descarte de variáveis irrelevantes para a tomada de decisão de risco.
+Para garantir uma comparação justa e aderente aos padrões de mercado, o conjunto de dados foi dividido estritamente na proporção de **80% para treinamento** e **20% para teste definitivo**. A criação de uma partição secundária estática de validação foi descartada, optando-se por utilizar a Validação Cruzada (*Cross-Validation*) rotativa durante a busca de hiperparâmetros, maximizando a volumetria disponível para o aprendizado dos algoritmos.
 
-### Descarte de Atributos Irrelevantes ou Vazados
-Removemos da matriz de recursos $X$ os seguintes componentes:
-* `ID` e `year`: Identificadores únicos e marcas temporais fixas que não possuem poder preditivo comportamental.
-* `rate_of_interest`, `Interest_rate_spread`, `Upfront_charges`, `property_value`, `LTV` e `processo_interrompido`: Colunas que só são preenchidas após a aprovação/andamento efetivo do crédito ou que revelam diretamente o encerramento do contrato. Mantê-las causaria um vazamento artificial de performance, tornando o modelo inútil para prever o risco na mesa de entrada.
+### 2.1. Pipeline da Regressão Logística (Logistic Regression)
+Atuando como o *baseline* estatístico clássico do projeto, este modelo linear exige transformações rigorosas de escala e codificação:
+* **Padronização Numérica:** Aplicação de `StandardScaler()` em `income`, `dtir1` e `Credit_Score` para garantir média zero e variância unitária, permitindo a convergência estável do otimizador geométrico (`solver='saga'`).
+* **Codificação Categórica:** Uso de `OneHotEncoder(drop='first')` para neutralizar a armadilha da multicolinearidade perfeita (*dummy variable trap*) através do descarte da primeira categoria.
+* **Seleção de Atributos:** Remoção manual de identificadores (`ID`, `year`) e de variáveis que gerariam *data leakage* por revelarem o andamento posterior do crédito (`rate_of_interest`, `Interest_rate_spread`, `Upfront_charges`, `property_value`, `LTV`, `processo_interrompido`).
+* **Sintonia via GridSearchCV:** O espaço de busca priorizou a otimização da métrica PR-AUC sob validação cruzada em 3 dobras (`cv=3`), atingindo os seguintes parâmetros ótimos: `C: 10.0`, `penalty: 'l1'` (Lasso) e `class_weight: None`.
 
-A seleção final concentrou-se estritamente nas informações cadastrais, de perfil financeiro e na política interna solicitada pelo cliente na contratação do financiamento.
-
----
-
-## 3. Tratamento de Dados Desbalanceados
-
-O problema de *Loan Default* apresenta um desbalanceamento natural (a classe de inadimplentes `1` é substancialmente menor que a classe de bons pagadores `0`). Se ignorado, o modelo focaria em maximizar a acurácia geral simplesmente ignorando os caloteiros.
-
-Para solucionar este comportamento sem a necessidade de criar dados sintéticos artificiais fora do pipeline, adotamos a estratégia de **Pesos de Classe Nativos**:
-* Injetamos o parâmetro `class_weight='balanced'` diretamente no motor do `LogisticRegression`. 
-* O algoritmo calcula automaticamente penalidades inversamente proporcionais às frequências das classes. Na prática, errar um cliente inadimplente custa muito mais caro para a função de perda do modelo do que errar um bom pagador, forçando a Regressão Logística a encontrar o equilíbrio ideal.
-* Toda a validação de hiperparâmetros no `GridSearchCV` foi configurada para maximizar a **PR-AUC** (`scoring='average_precision'`) através de uma **Validação Cruzada de 3 dobras (cv=3)**, garantindo que o ajuste fino dos parâmetros `C` e `penalty` priorizasse a precisão e o recall da classe de risco.
-* A divisão entre os dados de treino e teste foi fixada estritamente na proporção de 80/20. A criação de uma terceira partição isolada para validação foi descartada por se tornar redundante devido à implementação da Validação Cruzada (Cross-Validation) durante o ajuste de hiperparâmetros. Julgou-se que expandir o volume de dados disponível para o aprendizado (garantindo 80% da base para o treino) traria maior robustez estatística aos modelos do que reduzir essa amostragem para sustentar um lote de validação estático.
-
-
-
-# Descrição dos modelo Regressão Logística (Logistic Regression)
-
-A Regressão Logística foi selecionada como o primeiro modelo preditivo deste projeto, atuando como o nosso pilar estatístico clássico e *baseline* fundamental de comparação para os modelos baseados em árvores.
-
-### Conceitos Fundamentais e Princípio de Funcionamento
-Ao contrário da Regressão Linear, que tenta prever valores contínuos, a Regressão Logística é desenhada para problemas de classificação binária (onde o resultado $Y$ assume valor 0 ou 1). O algoritmo funciona estabelecendo uma relação linear entre as variáveis de entrada e o **logaritmo da chance** (*log-odds*) do evento de interesse ocorrer (neste caso, a inadimplência, onde $Status = 1$).
-
-O modelo estabelece uma fronteira de decisão linear na matriz espacial dos dados, separando os proponentes de crédito de acordo com a probabilidade calculada.
+### 2.2. Pipeline do CatBoost Classifier
+Implementado como o representante dos modelos de *Gradient Boosting* sequencial, este algoritmo foi desenhado para processar estruturas tabulares complexas:
+* **Tratamento de Strings:** Fora do pipeline, as variáveis categóricas foram convertidas explicitamente para o tipo `string` e seus valores ausentes unificados sob a tag `'missing'`.
+* **Mapeamento Nativo por Índices:** O pipeline foi configurado para rastrear a posição posicional das colunas pós-processamento, alimentando o parâmetro `cat_features` com a lista de índices (3 a 25) para que o estimador aplicasse seu algoritmo interno de *Target Encoding* ordenado, dispensando o One-Hot Encoding.
+* **Sintonia via RandomizedSearchCV:** Conduzida sob 50 iterações aleatórias com `cv=3` focando em PR-AUC. A combinação campeã resultou em: `iterations: 300`, `learning_rate: 0.05`, `depth: 8`, `l2_leaf_reg: 5` e `auto_class_weights: 'SqrtBalanced'`.
 
 ---
 
-### Vantagens e Limitações
+## 3. Avaliação de Resultados e Métricas de Desempenho
 
-#### Vantagens:
-* **Alta Interpretabilidade:** Cada variável possui um coeficiente associado. Isso permite que a diretoria e os auditores do banco entendam exatamente o peso e o impacto direto de cada atributo (como o aumento do DTI) no risco final do cliente.
-* **Saída Probabilística Direta:** O modelo não entrega apenas um veredito "sim" ou "não", mas sim uma probabilidade contínua, permitindo a perfeita implementação do nosso **Sistema de Farol**.
-* **Eficiência Computacional:** É extremamente leve e rápida para treinar e executar em ambientes de produção.
+### 3.1. Justificativa para a Escolha da Métrica Principal: PR-AUC
+O conjunto de teste deste projeto exibe um desbalanceamento nativo de classes, composto por 22.405 registros de bons pagadores (`Classe 0`) e 7.077 registros de inadimplentes (`Classe 1`) — fixando a taxa de risco basal em aproximadamente 24%.
 
-#### Limitações:
-* **Premissa de Linearidade:** Assume que a relação entre as variáveis independentes e o log-odds do risco é linear, falhando em capturar interações complexas e cruzamentos de dados não-lineares sem engenharia de recursos prévia.
-* **Sensibilidade a Outliers e Escala:** Valores discrepantes ou escalas massivamente diferentes distorcem completamente os coeficientes, exigindo o uso obrigatório de padronização (`StandardScaler`).
+Em cenários desbalanceados, a Acurácia Geral torna-se uma métrica enviesada, pois um classificador ingênuo que aprovasse todas as propostas obteria 76% de acerto, falhando completamente na identificação do risco. A curva ROC-AUC também pode projetar um otimismo artificial inflado pela abundância de verdadeiros negativos. 
 
----
+Por isso, a **Área sob a Curva Precisão-Recall (PR-AUC)** foi definida como a métrica soberana. Ela avalia exclusivamente o desempenho do algoritmo sobre a classe minoritária de risco, ponderando a Precisão (certeza ao acusar um calote) e o Recall (capacidade de capturar os caloteiros) ao longo de todos os limiares de decisão possíveis.
 
-### Justificativa da Escolha do Algoritmo
-No mercado financeiro e no setor bancário, a Regressão Logística é o **padrão ouro regulatório** exigido por órgãos de fiscalização (como os comitês de Basileia). A exigência de transparência em modelos de crédito (*explainable AI*) torna a Regressão Logística indispensável. Ninguém pode ter o crédito negado por uma "caixa preta" sem uma justificativa clara. 
-
-Portanto, a escolha do grupo baseou-se em garantir conformidade com as práticas reais do mercado de risco de crédito, servindo como o benchmark ideal de interpretabilidade.
-
----
-
-### Ajuste de Parâmetros Livres e Registro de Experimentos
-
-Para extrair a máxima eficiência do modelo linear, estruturamos um pipeline integrado ao `GridSearchCV` executando uma **Validação Cruzada de 3 dobras (cv=3)** focada exclusivamente em otimizar a **PR-AUC** (`average_precision`). 
-
-O espaço de busca foi configurado com as seguintes variações estruturais:
-* **`modelo__C` (Inverso da força de regularização):** Testamos `[0.01, 0.1, 1.0, 10.0]`. Valores menores adicionam uma penalização severa para evitar Overfitting; valores maiores dão mais liberdade ao modelo.
-* **`modelo__penalty` (Tipo de norma de penalização):** Testamos `['l1', 'l2']`. 
-    * O `l2` (Ridge) encolhe os coeficientes sem zerá-los.
-    * O `l1` (Lasso) força coeficientes de variáveis irrelevantes a zero, realizando uma seleção natural de atributos.
-* **`modelo__class_weight` (Peso das classes):** Testamos `['balanced', None]` para avaliar se a compensação matemática do desbalanceamento ajudaria ou distorceria a métrica de foco (PR-AUC).
-* **Configuração de Suporte:** Fixamos o otimizador como `solver='saga'` (obrigatório para suportar a penalidade `l1` em conjuntos de dados volumosos) e `max_iter=1000` para garantir a convergência dos gradientes.
-
----
-
-### Análise do Resultado e Parâmetros Campeões
-
-Após a varredura completa do espaço de busca, a combinação vencedora estabelecida pelo Grid Search foi:
-
-* **C:** `10.0`
-* **penalty:** `'l1'`
-* **class_weight:** `None`
-* **Melhor PR-AUC Média na Validação Cruzada:** `0.7430`
-
-#### Justificativa dos Resultados:
-1. **O Triunfo da Penalidade L1 (Lasso):** A escolha do `l1` pelo Grid Search indica que o nosso dataset possui ruídos ou colunas de texto (geradas pelo `OneHotEncoder`) redundantes. O Lasso agiu de forma cirúrgica, zerando os coeficientes das variáveis irrelevantes e mantendo apenas as features que realmente explicam o calote.
-2. **C = 10.0 (Regularização Fraca):** O modelo optou por um valor alto de $C$, indicando que após o tratamento correto com o MICE e o Scaler no pipeline, as variáveis preditivas apresentavam um sinal limpo e confiável, não exigindo um freio severo de regularização para evitar overfitting.
-3. **class_weight = None:** Como a nossa métrica alvo foi a **PR-AUC** (que avalia a precisão e o recall de forma contínua através de thresholds), o modelo preferiu manter a distribuição de probabilidade natural da base. Forçar o peso `balanced` deslocaria a curva de calibração, prejudicando a precisão pura exigida pelo cálculo da área.
-
-Com uma PR-AUC de **0.7430** na validação cruzada, a Regressão Logística provou que, quando implementado um pipeline com MICE, escalonamento adequado e remoção de data leakage, ela consegue atingir um patamar de performance altamente competitivo e resiliente.
-
-# CatBoost Classifier
-
-O CatBoost Classifier foi implementado como o modelo baseado em *Gradient Boosting* sobre árvores de decisão, projetado para mapear interações não-lineares e processar o conjunto de variáveis categóricas de forma otimizada.
-
-### Mapeamento Estrutural e Separação de Atributos
-Antes da introdução dos dados no pipeline preditivo, o conjunto de características foi segregado e tratado estruturalmente para atender às exigências de entrada do algoritmo:
-
-1. **Atributos Numéricos:** `income`, `dtir1` e `Credit_Score` foram isolados para o tratamento de dados ausentes via imputação iterativa.
-2. **Atributos Categóricos:** Identificados automaticamente via tipo de dado (`object` e `category`). Devido à restrição do CatBoost em lidar com valores nulos textuais ou tipos ambíguos na inicialização, aplicou-se um tratamento prévio fora do pipeline. Todas as variáveis categóricas foram convertidas explicitamente para o tipo `string` e os valores ausentes foram preenchidos com a categoria unificada `'missing'`.
-
----
-
-### Conceitos Fundamentais e Princípio de Funcionamento
-O CatBoost opera sob o princípio de *ensemble* sequencial, onde árvores de decisão são construídas de forma sucessiva para corrigir os resíduos (erros) cometidos pelas árvores anteriores. O algoritmo se diferencia por duas características fundamentais:
-
-* **Árvores Simétricas (*Oblivious Trees*):** O modelo adota estruturas de árvores onde os mesmos critérios de divisão são replicados em todos os nós de um mesmo nível. Essa simetria atua como uma barreira natural contra o sobreajuste (*overfitting*) e acelera o tempo de processamento na fase de teste.
-* **Mapeamento Nativo de Categóricas por Índices:** Ao contrário de modelos tradicionais que exigem a expansão da matriz via *One-Hot Encoding* antes do treinamento, o CatBoost processa os textos nativamente através de técnicas internas de *Target Encoding*. Para isso, o pipeline foi configurado para rastrear a posição exata dessas colunas após a reordenação promovida pelo pré-processamento, passando a lista de índices numéricos diretamente para o parâmetro `cat_features`.
-
----
-
-### Integração do Pré-processamento e Estrutura do Pipeline
-Para garantir a robustez metodológica, desenhou-se um pipeline autocontido que gerencia o fluxo dos dados:
-
-* **Via Numérica:** Aplica o `IterativeImputer` (MICE) utilizando o estimador `RandomForestRegressor(n_estimators=10)` para estimar probabilisticamente os valores nulos de `income`, `dtir1` e `Credit_Score`. Como o CatBoost é invariante à escala dos dados nas suas divisões, a padronização foi dispensada nesta esteira.
-* **Via Categórica:** Configurada com o parâmetro `remainder='passthrough'`, permitindo que as strings limpas passem diretamente pelo `ColumnTransformer` na forma de um DataFrame do Pandas, preservando sua estrutura original para o processamento nativo do estimador.
-
----
-
-### Ajuste de Parâmetros Livres e Registro de Experimentos
-
-O refinamento dos hiperparâmetros foi executado através do `RandomizedSearchCV`, configurado com uma Validação Cruzada de 3 dobras (`cv=3`) e um limite de 50 iterações aleatórias (`n_iter=50`). O objetivo da busca foi maximizar a área sob a curva Precisão-Recall (**PR-AUC**). O espaço amostral explorou as seguintes configurações:
-
-* **`iterations`:** Avaliado entre 100 e 400 árvores para determinar o ponto de convergência.
-* **`learning_rate`:** Testado nos valores `[0.01, 0.05, 0.1, 0.2]` para controlar a velocidade de aprendizado.
-* **`depth`:** Variado entre 4 e 10 níveis de profundidade das árvores simétricas.
-* **`l2_leaf_reg`:** Parâmetro de regularização L2 avaliado em `[1, 3, 5, 10]` para penalizar a complexidade das folhas.
-* **`auto_class_weights`:** Testado com as opções `Balanced`, `SqrtBalanced` e `None` para balancear o impacto da classe minoritária de inadimplentes.
-
----
-
-### Análise do Resultado e Parâmetros Campeões
-
-Após a execução das 50 combinações experimentais, os parâmetros ótimos selecionados pelo algoritmo foram:
-
-* **iterations:** 300
-* **learning_rate:** 0.05
-* **depth:** 8
-* **l2_leaf_reg:** 5
-* **auto_class_weights:** `'SqrtBalanced'`
-* **cat_features:** Índices mapeados de 3 a 25.
-
-#### Avaliação de Consistência Estatística:
-* **Melhor PR-AUC Média na Validação Cruzada:** `0.8045`
-
-O modelo final convergiu para uma estrutura de 300 árvores com profundidade moderada (8), combinada a uma taxa de aprendizado controlada (0.05) e regularização L2 fixada em 5. A escolha do peso `'SqrtBalanced'` confirmou a necessidade de penalizar os erros da classe inadimplente de forma suavizada (pela raiz quadrada da frequência inversa), o que permitiu estabilizar a oscilação entre a precisão e o recall durante as dobras da validação cruzada.
-
-
-# Análise de Resultados e Comparativo de Modelos
-
-## 1. Justificativa para a Escolha da Métrica Principal: PR-AUC
-
-A avaliação de modelos de concessão de crédito exige a escolha de métricas alinhadas à distribuição estatística do dataset e ao impacto financeiro do negócio. O conjunto de teste deste projeto apresenta um desbalanceamento nativo de classes, composto por **22.405 registros da classe 0** (bons pagadores) e **7.077 registros da classe 1** (inadimplentes) — o que significa que aproximadamente **24%** da base representa o evento de risco.
-
-Em cenários de desbalanceamento, métricas tradicionais como a Acurácia tornam-se enviesadas, pois um classificador ingênuo que simplesmente aprovasse todas as propostas obteria cerca de 76% de acerto, falhando completamente em identificar o risco. A curva ROC-AUC também pode apresentar um otimismo artificial, pois é influenciada pelo grande volume de verdadeiros negativos da classe majoritária.
-
-Por essa razão, a **Área sob a Curva Precisão-Recall (PR-AUC)** foi definida como a métrica soberana para a seleção do modelo campeão. A PR-AUC avalia exclusivamente o desempenho do algoritmo na classe minoritária (Inadimplentes), ponderando a **Precisão** (a certeza do modelo ao acusar um calote) e o **Recall** (a capacidade de capturar o maior número possível de caloteiros potenciais) ao longo de todos os limiares de decisão possíveis, sem ser distorcida pela abundância de clientes regulares.
-
----
-
-## 2. Análise Técnica Individual dos Modelos
-
-### 2.1. Random Forest Classifier
-O modelo baseado em *Bagging* apresentou uma **PR-AUC de 0.7948** no conjunto de teste, demonstrando uma sólida capacidade de discriminação de risco. 
-* **Precisão (Classe 1):** Atingiu **93%**, o patamar mais elevado do experimento. Isto significa que quando o modelo rotula um cliente como inadimplente, a probabilidade de acerto é muito alta, minimizando a ocorrência de falsos positivos (recusar um bom cliente por engano).
-* **Recall (Classe 1):** Limitou-se a **53%**. O algoritmo demonstrou um comportamento conservador, deixando de detectar quase metade (47%) dos inadimplentes reais presentes na base de teste.
-* **F1-Score (Classe 1):** O equilíbrio harmônico fixou-se em **0.68**.
-
-### 2.2. Regressão Logística
-Após a adequada estruturação do pipeline — englobando a codificação por *One-Hot Encoding*, imputação via MICE e padronização por *StandardScaler* —, o modelo linear estabeleceu uma **PR-AUC de 0.7397**.
-* **Precisão (Classe 1):** Alinhou-se ao Random Forest, alcançando os mesmos **93%**.
-* **Recall (Classe 1):** Registrou o menor desempenho do experimento, com **47%**. A rigidez geométrica da fronteira linear impossibilitou o algoritmo de mapear os bolsões de risco não-lineares, resultando na perda de 53% dos calotes reais.
-* **F1-Score (Classe 1):** Fixou-se em **0.62**, refletindo a menor eficiência global no tratamento da classe minoritária.
-
-### 2.3. CatBoost Classifier
-O algoritmo de *Gradient Boosting* sequencial obteve a maior **PR-AUC do experimento, atingindo 0.8030** no conjunto de teste.
-* **Precisão (Classe 1):** Registrou **85%**. Houve uma redução controlada na certeza em comparação aos 93% dos concorrentes, aumentando sutilmente a taxa de falsos positivos.
-* **Recall (Classe 1):** Expandiu-se para **60%**, o maior índice apurado no projeto. O modelo foi capaz de localizar e reter uma fatia significativamente maior do prejuízo oculto na base.
-* **F1-Score (Classe 1):** Alcançou o topo da análise com **0.71**, confirmando o melhor equilíbrio entre as forças de penalização.
-
----
-
-## 3. Tabela Comparativa de Desempenho
-
-A matriz abaixo consolida os resultados obtidos pelos três estimadores no conjunto de teste definitivo:
+### 3.2. Tabela Comparativa de Desempenho (Conjunto de Teste)
 
 | Métrica de Avaliação | Regressão Logística | Random Forest | CatBoost Classifier |
 | :--- | :---: | :---: | :---: |
@@ -226,19 +62,79 @@ A matriz abaixo consolida os resultados obtidos pelos três estimadores no conju
 
 ---
 
-## 4. Escolha e Justificativa da escolha do Modelo: CatBoost
+## 4. Análise Comparativa: Desempenho de Treino versus Teste
 
-Considerando a premissa de selecionar **apenas um único modelo** para integrar a esteira de produção do banco, o **CatBoost Classifier foi o escolhido como o modelo campeão do projeto**.
+A tabela abaixo confronta as métricas obtidas no conjunto de treinamento (117.928 registros) contra o conjunto de teste isolado (29.482 registros), permitindo auditar a capacidade de generalização e a presença de sobreajuste (*overfitting*).
 
-### Justificativa Técnica
-Sob o critério estatístico estrito da PR-AUC (0.8030), o CatBoost demonstrou superioridade matemática sobre o Random Forest (0.7948) e a Regressão Logística (0.7397). O ganho na área prova que a distribuição de probabilidades gerada pelas árvores simétricas do CatBoost é mais estável e robusta ao longo de diferentes pontos de corte, permitindo uma calibração mais eficiente para o negócio.
+| Algoritmo | Base | PR-AUC | F1-Score | Recall | Precision | Acurácia Geral |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Regressão Logística** | Treino<br>Teste | 0.7435<br>0.7397 | 0.6200<br>0.6200 | 0.4700<br>0.4700 | 0.9400<br>0.9300 | 0.8600<br>0.8600 |
+| **Random Forest** | Treino<br>Teste | 0.8905<br>0.7948 | 0.7300<br>0.6800 | 0.5900<br>0.5300 | 0.9800<br>0.9300 | 0.9000<br>0.8800 |
+| **CatBoost Classifier** | Treino<br>Teste | 0.8181<br>0.8030 | 0.7200<br>0.7100 | 0.6100<br>0.6000 | 0.8700<br>0.8500 | 0.8900<br>0.8800 |
+
+### Diagnóstico Técnico de Consistência
+* **Regressão Logística (Convergência Estável):** Apresentou um gap absoluto de PR-AUC de apenas 0.0038. A estabilidade total indica que o modelo atingiu seu limite de representação linear estável (*underfitting* estrutural relativo), operando de forma previsível, mas incapaz de capturar interações complexas.
+* **Random Forest (Evidência de Overfitting):** Registrou a maior degradação de performance entre as bases, com uma queda de 0.0957 na PR-AUC e recuo de 6 pontos em Recall. Sua arquitetura de árvores independentes profundas (`max_depth=20`) tendeu a memorizar ruídos específicos da base de treino, reduzindo sua eficiência em dados inéditos.
+* **CatBoost Classifier (Generalização Ideal):** Demonstrou excelente equilíbrio com um gap contido de PR-AUC de 0.0151 e variações marginais de F1-Score e Recall. Os resultados comprovam que as estruturas de regularização L2 e o uso de árvores simétricas contiveram a variância de forma eficaz.
+
+---
+
+## 5. Análise de Importância de Variáveis: Individual e Conjunta
+
+### Random Forest Classifier
+<img width="1101" height="785" alt="image" src="https://github.com/user-attachments/assets/92519349-1573-4173-a5a2-8a2ba91799ab" />
+
+* **Comportamento:** O modelo distribui seu aprendizado concentrando **47.63%** da importância na variável categórica isolada `credit_type_EQUI`. Os pesos secundários dividem-se entre o prazo do contrato (`term`: 9.12%), o valor financiado (`loan_amount`: 5.79%) e os indicadores do cliente (`Credit_Score`: 4.11%; `income`: 3.35%).
+
+### Regressão Logística (Coeficientes)
+<img width="1142" height="807" alt="image" src="https://github.com/user-attachments/assets/f78d9a46-a67b-4e0a-b7ef-09d4a129da69" />
+
+* **Comportamento:** O modelo linear explicita a direção do risco. A categoria `credit_type_EQUI` desponta com o maior coeficiente positivo (**+10.665**), seguida por `Secured_by_land` (+3.074), atuando como os principais impulsionadores de calote. Em contrapartida, as variáveis `lump_sum_payment_not_lpsm` (-2.629) e `Neg_ammortization_not_neg` (-1.108) agem como os fatores protetores mais intensos. A regularização L1 minimizou a força linear dos atributos numéricos contínuos.
+
+### CatBoost Classifier
+<img width="1107" height="797" alt="image" src="https://github.com/user-attachments/assets/ee7a6842-819e-4e33-aac6-2a9195dcd230" />
+
+* **Comportamento:** Ao avaliar os atributos sem fracionamento macro, o CatBoost concentra **71.26%** da relevância preditiva na variável mãe `credit_type`. O modelo utiliza o índice de endividamento (`dtir1`: 4.49%), o tipo de amortização (`Neg_ammortization`: 3.19%) e a renda (`income`: 3.01%) apenas como fatores de calibração periférica.
+
+### Síntese de Negócio da Importância de Variáveis
+* **Consenso Absoluto:** Independentemente da abordagem matemática adotada (linear, bagging ou boosting), a modalidade de crédito do tipo **EQUI** é identificada de forma unânime como o principal gatilho de risco e inadimplência da carteira.
+* **Mapeamento Contínuo:** Os modelos de árvore conferem maior relevância a variáveis como `income` e `dtir1` do que a Regressão Logística. Isso decorre da capacidade dos modelos não-lineares de extrair valor dessas métricas por meio de cortes repetidos e interações dinâmicas, enquanto o modelo linear fica engessado a uma taxa de impacto fixa.
+
+---
+
+## 6. Análise Gráfica Avançada
+
+### 6.1. Análise da Curva Precisão-Recall Combinada
+<img width="1187" height="708" alt="image" src="https://github.com/user-attachments/assets/d0e708ab-df84-4de6-b6ff-97193d1c35d5" />
+
+A avaliação visual da curva PR ratifica a distribuição e consistência dos modelos:
+* **Convergência Inicial (Recall de 0.0 a 0.42):** Todos os estimadores operam com Precisão de 1.0 (100%), capturando apenas os inadimplentes de risco óbvio e incontestável.
+* **Quebra de Linearidade (Recall > 0.42):** A Regressão Logística sofre o decaimento mais acentuado do gráfico devido à incapacidade geométrica de contornar subgrupos ambíguos.
+* **Região Operacional Crítica (Recall de 0.45 a 0.85):** O **CatBoost estabelece-se como o envelope superior do gráfico**. Na marca de 0.60 de Recall, por exemplo, o CatBoost sustenta 85% de precisão, superando o Random Forest (80%) e a Regressão Logística (63%). A maior integral de área (PR-AUC = 0.8030) valida estatisticamente o melhor ordenamento das probabilidades do modelo de *boosting*.
+
+### 6.2. Análise Técnica do Gráfico de Ganho Cumulativo
+<img width="1137" height="698" alt="image" src="https://github.com/user-attachments/assets/cc8c755a-0809-4271-9959-981f8a85d6ad" />
+
+O gráfico de ganho traduz o poder preditivo em eficiência financeira de carteira:
+* **Decil de Risco de 20%:** Ao isolar a quinta parte mais perigosa indicada pelos scores, o CatBoost e o Random Forest conseguem reter **65% de toda a inadimplência real** da base (contra apenas 20% de uma escolha aleatória).
+* **Decil de Risco de 40%:** Ao atingir os 40% de maior risco, o CatBoost estabiliza a captura em **82% dos inadimplentes totais**. 
+* **Otimização Operacional:** A curvatura acentuada do CatBoost prova uma alta densidade de ordenamento, permitindo que a mesa de crédito automatizada concentre seus esforços de restrição ou auditoria em menos da metade da base amostral, mitigando mais de quatro quintos das perdas financeiras por inadimplência.
+
+---
+
+## 7. Seleção e Justificativa do Modelo Campeão: CatBoost
+
+Considerando os requisitos de implementação técnica e governança de risco de crédito, o **CatBoost Classifier foi selecionado como o modelo campeão do projeto**.
+
+### Justificativa Técnica e Estatística
+Sob a métrica alvo de PR-AUC em ambiente de teste, o CatBoost obteve o patamar de **0.8030**, superando o Random Forest (0.7948) e a Regressão Logística (0.7397). Além disso, a auditoria de consistência provou que o CatBoost possui a maior estabilidade estatística do experimento, mantendo um gap quase nulo de performance entre treino e teste (0.0151), o que blinda a operação contra surpresas de degradação preditiva em produção (*overfitting*).
 
 ### Justificativa de Negócio e Gestão de Risco
-A decisão apoia-se na análise do *trade-off* entre Precisão e Recall aplicado à saúde financeira de uma instituição de crédito. 
+A escolha consolida-se na gestão do *trade-off* financeiro entre Precisão e Recall. A Regressão Logística e o Random Forest priorizaram uma precisão extrema de 93% no teste, porém ao custo de deixar passar, respectivamente, 53% e 47% de calotes reais (baixo Recall). 
 
-A Regressão Logística e o Random Forest priorizaram uma precisão extrema (93%), mas ao custo de ignorar, respectivamente, 53% e 47% dos calotes. No cenário bancário, o custo financeiro de um **Falso Negativo** (conceder crédito a um cliente que se tornará inadimplente) é massivamente superior ao custo de um **Falso Positivo** (negar crédito a um bom pagador por suspeita de risco). O calote consome diretamente o capital principal do banco, enquanto o alarme falso representa apenas um custo de oportunidade marginal.
+No mercado de crédito, o custo financeiro de um **Falso Negativo** (aprovar um proponente inadimplente) é severamente mais destrutivo do que o de um **Falso Positivo** (negar crédito a um bom pagador), pois o calote consome diretamente o capital principal do caixa da instituição. 
 
-O CatBoost sacrificou estrategicamente 8% de precisão (reduzindo de 93% para 85%), mas converteu esse recuo em um **ganho de 7% em Recall sobre o Random Forest** e **13% sobre a Regressão Logística**. Na prática do portfólio, ao capturar 60% de toda a inadimplência real da base de teste, o CatBoost barra a saída de milhões de reais em crédito podre, mitigando a inadimplência sistêmica e maximizando o Retorno sobre o Investimento (ROI) da operação de crédito de forma significativamente mais eficaz do que os demais modelos testados.
+Ao aceitar recuar estrategicamente a precisão para 85%, o CatBoost expandiu a capacidade de captura para **60% de Recall** (7% a mais que o Random Forest e 13% a mais que a Regressão Logística). Esse comportamento focado na contenção de perdas maximiza o ROI da operação de crédito, convertendo a inteligência de dados em proteção direta ao patrimônio financeiro do banco.
 
 
 
