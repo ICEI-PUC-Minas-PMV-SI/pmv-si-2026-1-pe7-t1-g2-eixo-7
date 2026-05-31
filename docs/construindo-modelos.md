@@ -102,7 +102,7 @@ A tabela abaixo confronta as métricas obtidas no conjunto de treinamento (117.9
 
 ---
 
-## 6. Análise Gráfica Avançada
+## 6. Análise Gráfica 
 
 ### 6.1. Análise da Curva Precisão-Recall Combinada
 <img width="1187" height="708" alt="image" src="https://github.com/user-attachments/assets/d0e708ab-df84-4de6-b6ff-97193d1c35d5" />
@@ -135,6 +135,73 @@ A escolha consolida-se na gestão do *trade-off* financeiro entre Precisão e Re
 No mercado de crédito, o custo financeiro de um **Falso Negativo** (aprovar um proponente inadimplente) é severamente mais destrutivo do que o de um **Falso Positivo** (negar crédito a um bom pagador), pois o calote consome diretamente o capital principal do caixa da instituição. 
 
 Ao aceitar recuar estrategicamente a precisão para 85%, o CatBoost expandiu a capacidade de captura para **60% de Recall** (7% a mais que o Random Forest e 13% a mais que a Regressão Logística). Esse comportamento focado na contenção de perdas maximiza o ROI da operação de crédito, convertendo a inteligência de dados em proteção direta ao patrimônio financeiro do banco.
+
+# Revisão do pipeline de pesquisa e análise de dados
+
+Este documento apresenta uma avaliação crítica da evolução do nosso pipeline de ciência de dados, contrastando a arquitetura inicial (Etapa 03) com o pipeline otimizado atual. O objetivo é demonstrar como os ajustes estruturais implementados mitigaram riscos estatísticos graves e tornaram a esteira de modelagem modular, escalável e generalizável para qualquer problema de aprendizado de máquina tabular.
+
+---
+
+## 1. Resumo Comparativo das Alterações Arquiteturais
+
+A tabela abaixo sintetiza as transformações realizadas no fluxo de engenharia e modelagem:
+
+| Fase do Pipeline | Arquitetura Antiga (Etapa 03) | Nova Arquitetura Otimizada | Motivo da Mudança |
+| :--- | :--- | :--- | :--- |
+| **Saneamento de Variáveis** | Remoção reativa de colunas ao longo do script. | Exclusão global e centralizada na entrada dos dados. | Prevenção de anomalias de execução e organização do fluxo. |
+| **Tratamento de Nulos** | Imputação estática e MICE executados globalmente antes do split. | Encapsulamento do MICE em um `ColumnTransformer` pós-split. | Eliminação completa de vazamento de dados (*Data Leakage*). |
+| **Codificação de Categóricas** | `pd.get_dummies` aplicado na base inteira de forma isolada. | Processamento integrado ao fluxo ou tratamento estruturado de strings. | Reprodutibilidade e compatibilidade com novos fluxos de entrada. |
+| **Estratégia de Validação** | Divisão simples treino/teste (*Holdout*) sem validação interna. | Validação Cruzada Estratificada de 3 dobras (`cv=3`). | Redução da variância da métrica alvo e maior estabilidade estatística. |
+| **Ajuste de Parâmetros** | Treinamento com hiperparâmetros fixos (padrão de fábrica). | Otimização automatizada via `RandomizedSearchCV` (30 iterações). | Busca sistemática pela melhor capacidade de generalização do modelo. |
+
+<img width="490" height="294" alt="image" src="https://github.com/user-attachments/assets/fae731d1-410b-4bb4-ba98-8dcb0fcc3225" />
+Pipeline atualizado
+
+---
+
+## 2. Análise Crítica por Fase do Pipeline
+
+### 2.1. Preparação de Dados e Mitigação de Vazamento (*Data Leakage*)
+
+#### O Problema Estrutural Antigo:
+No pipeline original, o método `IterativeImputer(MICE)` era instanciado e aplicado através de um `.fit_transform()` diretamente sobre a base de dados unificada (`df_clean`), antes da execução do `train_test_split`. 
+
+* **Impacto Estatístico:** Esta prática introduz uma falha metodológica grave conhecida como *Data Leakage* (Vazamento de Dados). Ao calcular as relações estatísticas e preencher os valores nulos utilizando o dataset inteiro, o estimador do MICE "observou" as médias, variâncias e distribuições que pertenciam exclusivamente ao conjunto de teste. Consequentemente, o conjunto de treino foi corrompido com informações do futuro, gerando métricas de performance falsamente otimistas no desenvolvimento.
+
+#### A Solução Implementada:
+O novo pipeline realiza a separação estrita dos dados em treino (80%) e teste (20%) na largada do script. O `IterativeImputer` foi encapsulado dentro do objeto `ColumnTransformer`. 
+
+* **Justificativa:** Dessa forma, o aprendizado da imputação (`.fit()`) ocorre estritamente sobre a partição de treino de cada dobra da validação cruzada. Os dados de teste permanecem completamente isolados (sala escura), recebendo apenas a aplicação das regras aprendidas (`.transform()`), garantindo a legitimidade científica dos resultados.
+
+### 2.2. Gestão de Atributos Futuros e Visão de Negócio
+
+#### O Problema Estrutural Antigo:
+O descarte de variáveis com vazamento ou irrelevantes era feito de forma pulverizada e tardia. Colunas como `processo_interrompido` eram mantidas durante a imputação e removidas manualmente momentos antes do ajuste do estimador.
+
+#### A Solução Implementada:
+A nova arquitetura institui uma lista de exclusão global na primeira etapa do script (`colunas_para_remover`), eliminando de imediato atributos como `rate_of_interest`, `Interest_rate_spread`, `Upfront_charges`, `property_value` e `LTV`.
+
+* **Justificativa:** Em um cenário de produção real em uma instituição financeira, essas informações não estão disponíveis no momento em que o proponente preenche o cadastro na mesa de crédito (são atributos gerados após a análise ou andamento da proposta). Mantê-los no treinamento geraria um modelo incapaz de operar na triagem inicial de risco.
+
+### 2.3. Transição do Modelo Estático para a Experimentação Automatizada
+
+#### O Problema Estrutural Antigo:
+O modelo anterior ajustava um único estimador `RandomForestClassifier` com parâmetros fixos, avaliando-o uma única vez contra a base de teste. O fluxo era rígido, impossibilitando testar novas combinações ou garantir que o algoritmo não estivesse operando em subotimização.
+
+#### A Solução Implementada:
+Substituiu-se o ajuste direto pela integração com o `RandomizedSearchCV`, avaliando 30 combinações distintas de parâmetros livres (como `n_estimators`, `max_depth`, `min_samples_split` e `class_weight`) sob o critério da métrica **PR-AUC** (`scoring='average_precision'`).
+
+* **Justificativa:** A busca sistemática e automatizada transforma o pipeline em um arcabouço flexível. Se o volume de dados aumentar ou se o dataset for substituído por outra aplicação de negócios, o pipeline se reajusta sozinho para encontrar a nova fronteira de decisão ótima através da rotação da validação cruzada.
+
+---
+
+## 3. Generalização do Arcabouço para Outros Cenários
+
+Com as mudanças realizadas, o novo pipeline tornou-se **agnóstico ao problema**, transformando-se em uma estrutura modular que atende aos requisitos de generalização exigidos:
+
+1. **Modularidade via Pipelines e Transformers:** Toda a inteligência de processamento está amarrada aos objetos `Pipeline` e `ColumnTransformer`. Se o tipo de dado mudar de numérico para texto estruturado, basta substituir o `IterativeImputer` por um codificador adequado (como `OneHotEncoder` ou `TargetEncoder`), mantendo o restante da estrutura de busca e avaliação intacta.
+2. **Independência de Algoritmo:** A arquitetura aceita a substituição do estimador final de forma transparente. O mesmo fluxo desenvolvido para o Random Forest foi replicado para a Regressão Logística e para o CatBoost Classifier, alterando apenas o dicionário de parâmetros de busca (`param_dist`).
+3. **Robustez Métrica Confiável:** Ao fixar a validação cruzada avaliando simultaneamente o comportamento de Treino e Teste (conforme documentado na nossa análise de consistência preditiva), o pipeline valida a si mesmo de forma contínua, emitindo alertas numéricos de *overfitting* através do monitoramento do gap absoluto de performance.
 
 
 
