@@ -1,0 +1,27 @@
+# --- Bibliotecas de ML: PINADAS nas MESMAS versões usadas no treino ---
+# Isso é essencial: o pickle só reabre com segurança nas mesmas versões.
+numpy==2.0.2
+pandas==2.2.2
+scikit-learn==1.6.1
+scipy==1.16.3
+catboost==1.2.10
+ 
+# --- Backend ---
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+ 
+# --- Para o cliente de teste ---
+requests>=2.31
+
+# # 1) cria e ativa um ambiente virtual
+# python3 -m venv .venv
+# source .venv/bin/activate
+
+# # 2) instala as dependências
+# pip install --upgrade pip
+# pip install -r requirements.txt
+
+# # 3) roda o servidor
+# uvicorn app:app --reload
+ 
