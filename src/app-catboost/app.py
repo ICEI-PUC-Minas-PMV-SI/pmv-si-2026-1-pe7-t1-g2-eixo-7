@@ -16,8 +16,9 @@ Ou seja: o `predict_mpg(config, model)` do BMI vira o endpoint POST /prever.
 
 Para rodar:
     pip install -r requirements.txt
-    uvicorn app:app --reload
-    # abra http://127.0.0.1:8000/docs  (interface para testar)
+    flask --app app run --reload
+    # ou simplesmente: python app.py
+    # depois mande um POST para http://127.0.0.1:8000/prever
 """
 
 from pathlib import Path
@@ -25,8 +26,7 @@ import json
 import pickle
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field
+from flask import Flask, jsonify, request
 
 # ---------------------------------------------------------------------------
 # 1) Carregamento do modelo + esquema (UMA vez, quando o servidor sobe)
@@ -40,100 +40,92 @@ if not MODELO_PATH.exists() or not SCHEMA_PATH.exists():
         "Arquivos do modelo não encontrados.")
 
 with open(MODELO_PATH, "rb") as f:
-    modelo = pickle.load(f)          
+    modelo = pickle.load(f)
 
 with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
     schema = json.load(f)
 
-FEATURE_ORDER = schema["feature_order"] 
+FEATURE_ORDER = schema["feature_order"]
 COLUNAS_CATEGORICAS = schema["colunas_categoricas"]
 
-app = FastAPI(
-    title="API de Previsão de Inadimplência",
-    description=(
-        "Recebe os dados de um pedido de empréstimo e devolve a probabilidade "
-        "de inadimplência, usando o pipeline CatBoost treinado no notebook."
-    ),
-    version="1.0.0",
-)
+app = Flask(__name__)
+
+# ---------------------------------------------------------------------------
+# 2) Esquema de entrada (substitui o modelo Pydantic do FastAPI)
+#
+# Cada campo aponta para o tipo esperado. A coluna original
+# "co-applicant_credit_type" tem hífen, então no JSON é enviada com esse nome
+# mesmo — aqui não precisamos de alias porque trabalhamos direto com o dict.
+# ---------------------------------------------------------------------------
+CAMPOS_NUMERICOS_INT = ["ID", "year", "Credit_Score"]
+CAMPOS_NUMERICOS_FLOAT = ["loan_amount", "term", "income", "dtir1"]
+CAMPOS_TEXTO = [
+    "loan_limit", "Gender", "approv_in_adv", "loan_type", "loan_purpose",
+    "Credit_Worthiness", "open_credit", "business_or_commercial",
+    "Neg_ammortization", "interest_only", "lump_sum_payment",
+    "construction_type", "occupancy_type", "Secured_by", "total_units",
+    "credit_type", "co-applicant_credit_type", "age",
+    "submission_of_application", "Region", "Security_Type",
+]
+
+CAMPOS_OBRIGATORIOS = CAMPOS_NUMERICOS_INT + CAMPOS_NUMERICOS_FLOAT + CAMPOS_TEXTO
+
+EXEMPLO = {
+    "ID": 24890,
+    "year": 2019,
+    "loan_amount": 206500.0,
+    "term": 360.0,
+    "income": 4980.0,
+    "Credit_Score": 758,
+    "dtir1": 39.0,
+    "loan_limit": "cf",
+    "Gender": "Male",
+    "approv_in_adv": "nopre",
+    "loan_type": "type1",
+    "loan_purpose": "p1",
+    "Credit_Worthiness": "l1",
+    "open_credit": "nopc",
+    "business_or_commercial": "nob/c",
+    "Neg_ammortization": "not_neg",
+    "interest_only": "not_int",
+    "lump_sum_payment": "not_lpsm",
+    "construction_type": "sb",
+    "occupancy_type": "pr",
+    "Secured_by": "home",
+    "total_units": "1U",
+    "credit_type": "EXP",
+    "co-applicant_credit_type": "CIB",
+    "age": "45-54",
+    "submission_of_application": "to_inst",
+    "Region": "south",
+    "Security_Type": "direct",
+}
 
 
-class Solicitacao(BaseModel):
-    # ----- numéricas -----
-    ID: int
-    year: int
-    loan_amount: float
-    term: float
-    income: float
-    Credit_Score: int
-    dtir1: float
-    # ----- categóricas (texto) -----
-    loan_limit: str
-    Gender: str
-    approv_in_adv: str
-    loan_type: str
-    loan_purpose: str
-    Credit_Worthiness: str
-    open_credit: str
-    business_or_commercial: str
-    Neg_ammortization: str
-    interest_only: str
-    lump_sum_payment: str
-    construction_type: str
-    occupancy_type: str
-    Secured_by: str
-    total_units: str
-    credit_type: str
-    # a coluna original tem hífen, que não é um nome válido em Python,
-    # então usamos um alias: no JSON envie "co-applicant_credit_type".
-    co_applicant_credit_type: str = Field(alias="co-applicant_credit_type")
-    age: str
-    submission_of_application: str
-    Region: str
-    Security_Type: str
+def validar_e_converter(dados):
+    """Valida os campos recebidos e devolve um dict pronto para o DataFrame.
 
-    model_config = ConfigDict(
-        populate_by_name=True,
-        json_schema_extra={
-            "example": {
-                "ID": 24890,
-                "year": 2019,
-                "loan_amount": 206500.0,
-                "term": 360.0,
-                "income": 4980.0,
-                "Credit_Score": 758,
-                "dtir1": 39.0,
-                "loan_limit": "cf",
-                "Gender": "Male",
-                "approv_in_adv": "nopre",
-                "loan_type": "type1",
-                "loan_purpose": "p1",
-                "Credit_Worthiness": "l1",
-                "open_credit": "nopc",
-                "business_or_commercial": "nob/c",
-                "Neg_ammortization": "not_neg",
-                "interest_only": "not_int",
-                "lump_sum_payment": "not_lpsm",
-                "construction_type": "sb",
-                "occupancy_type": "pr",
-                "Secured_by": "home",
-                "total_units": "1U",
-                "credit_type": "EXP",
-                "co-applicant_credit_type": "CIB",
-                "age": "45-54",
-                "submission_of_application": "to_inst",
-                "Region": "south",
-                "Security_Type": "direct",
-            }
-        },
-    )
+    Levanta ValueError com uma mensagem amigável quando algo está errado
+    (campo faltando ou tipo inválido), papel que antes era do Pydantic.
+    """
+    faltando = [campo for campo in CAMPOS_OBRIGATORIOS if campo not in dados]
+    if faltando:
+        raise ValueError(f"Campos obrigatórios ausentes: {', '.join(faltando)}")
 
-
-class Resposta(BaseModel):
-    probabilidade_inadimplencia: float  
-    classe: int                         
-    rotulo: str                         
-    limiar: float                       
+    convertido = {}
+    for campo in CAMPOS_NUMERICOS_INT:
+        try:
+            convertido[campo] = int(dados[campo])
+        except (TypeError, ValueError):
+            raise ValueError(f"Campo '{campo}' deve ser um inteiro.")
+    for campo in CAMPOS_NUMERICOS_FLOAT:
+        try:
+            convertido[campo] = float(dados[campo])
+        except (TypeError, ValueError):
+            raise ValueError(f"Campo '{campo}' deve ser um número.")
+    for campo in CAMPOS_TEXTO:
+        convertido[campo] = str(dados[campo])
+    return convertido
 
 
 # ---------------------------------------------------------------------------
@@ -141,17 +133,34 @@ class Resposta(BaseModel):
 # ---------------------------------------------------------------------------
 @app.get("/")
 def raiz():
-    return {"mensagem": "API de inadimplência no ar. Acesse /docs para testar."}
+    return jsonify(
+        {"mensagem": "API de inadimplência no ar. Mande um POST para /prever."}
+    )
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "n_features": len(FEATURE_ORDER)}
+    return jsonify({"status": "ok", "n_features": len(FEATURE_ORDER)})
 
 
-@app.post("/prever", response_model=Resposta)
-def prever(solicitacao: Solicitacao, limiar: float = Query(0.5, ge=0.0, le=1.0)):
-    dados = solicitacao.model_dump(by_alias=True)
+@app.post("/prever")
+def prever():
+    corpo = request.get_json(silent=True)
+    if not isinstance(corpo, dict):
+        return jsonify({"detail": "Envie um corpo JSON válido."}), 400
+
+    # limiar pode vir como query string (?limiar=0.5), igual ao FastAPI
+    try:
+        limiar = float(request.args.get("limiar", 0.5))
+    except ValueError:
+        return jsonify({"detail": "limiar deve ser um número."}), 400
+    if not 0.0 <= limiar <= 1.0:
+        return jsonify({"detail": "limiar deve estar entre 0.0 e 1.0."}), 400
+
+    try:
+        dados = validar_e_converter(corpo)
+    except ValueError as exc:
+        return jsonify({"detail": str(exc)}), 422
 
     df = pd.DataFrame([dados])
 
@@ -163,18 +172,18 @@ def prever(solicitacao: Solicitacao, limiar: float = Query(0.5, ge=0.0, le=1.0))
     try:
         prob = float(modelo.predict_proba(df)[:, 1][0])  # probabilidade de Status=1
     except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=f"Erro ao prever: {exc}")
+        return jsonify({"detail": f"Erro ao prever: {exc}"}), 500
 
     classe = int(prob >= limiar)
-    return Resposta(
-        probabilidade_inadimplencia=round(prob, 4),
-        classe=classe,
-        rotulo="Inadimplente" if classe == 1 else "Adimplente",
-        limiar=limiar,
+    return jsonify(
+        {
+            "probabilidade_inadimplencia": round(prob, 4),
+            "classe": classe,
+            "rotulo": "Inadimplente" if classe == 1 else "Adimplente",
+            "limiar": limiar,
+        }
     )
 
 
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    app.run(host="0.0.0.0", port=8000, debug=True)
