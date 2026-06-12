@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Previsão de Inadimplência</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="page-header">
+      <h1>Previsão de Inadimplência</h1>
+    </header>
+
+    <form id="form-previsao" novalidate>
+      <!-- ================= Numéricos ================= -->
+      <fieldset>
+        <h2 class="secao-titulo">Dados numéricos</h2>
+        <div class="grid">
+          <div class="campo">
+            <label for="Credit_Score">Credit Score</label>
+            <input type="number" id="Credit_Score" name="Credit_Score" step="1" value="758" required
+                   placeholder="Pontuação de crédito do solicitante" />
+            <small>Pontuação de crédito do solicitante</small>
+          </div>
+
+          <div class="campo">
+            <label for="loan_amount">Valor do empréstimo</label>
+            <input type="number" id="loan_amount" name="loan_amount" step="any" value="206500" required
+                   placeholder="Valor solicitado no empréstimo" />
+            <small>Valor solicitado no empréstimo</small>
+          </div>
+
+          <div class="campo">
+            <label for="term">Prazo (meses)</label>
+            <input type="number" id="term" name="term" step="any" value="360" required
+                   placeholder="Prazo para pagamento do empréstimo (em meses)" />
+            <small>Prazo para pagamento do empréstimo (em meses)</small>
+          </div>
+
+          <div class="campo">
+            <label for="income">Renda</label>
+            <input type="number" id="income" name="income" step="any" value="4980" required
+                   placeholder="Renda anual do solicitante" />
+            <small>Renda anual do solicitante</small>
+          </div>
+
+          <div class="campo">
+            <label for="dtir1">DTIR1</label>
+            <input type="number" id="dtir1" name="dtir1" step="any" value="39" required
+                   placeholder="Debt-to-Income Ratio (relação dívida/renda)" />
+            <small>Debt-to-Income Ratio (relação dívida/renda)</small>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ================= Categóricos ================= -->
+      <fieldset>
+        <h2 class="secao-titulo">Dados categóricos</h2>
+        <div class="grid">
+          <div class="campo">
+            <label for="loan_limit">Segue normas padrão?</label>
+            <select id="loan_limit" name="loan_limit" required>
+              <option value="cf" selected>cf — segue normas padrão</option>
+              <option value="ncf">ncf — não segue normas padrão</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="Gender">Gênero do solicitante</label>
+            <select id="Gender" name="Gender" required>
+              <option value="Male" selected>Masculino</option>
+              <option value="Female">Feminino</option>
+              <option value="Joint">Conjunto</option>
+              <option value="Sex Not Available">Não informado</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="approv_in_adv">Houve pré-aprovação?</label>
+            <select id="approv_in_adv" name="approv_in_adv" required>
+              <option value="pre">Pré-aprovado</option>
+              <option value="nopre" selected>Não pré-aprovado</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="loan_type">Tipo de empréstimo</label>
+            <select id="loan_type" name="loan_type" required>
+              <option value="type1" selected>Tipo 1</option>
+              <option value="type2">Tipo 2</option>
+              <option value="type3">Tipo 3</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="loan_purpose">Motivo do empréstimo</label>
+            <select id="loan_purpose" name="loan_purpose" required>
+              <option value="p1" selected>Motivo 1</option>
+              <option value="p2">Motivo 2</option>
+              <option value="p3">Motivo 3</option>
+              <option value="p4">Motivo 4</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="Credit_Worthiness">Idoneidade de crédito</label>
+            <select id="Credit_Worthiness" name="Credit_Worthiness" required>
+              <option value="l1" selected>Nível 1 — maior idoneidade</option>
+              <option value="l2">Nível 2</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="open_credit">Possui crédito aberto?</label>
+            <select id="open_credit" name="open_credit" required>
+              <option value="opc">Possui crédito aberto</option>
+              <option value="nopc" selected>Não possui crédito aberto</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="business_or_commercial">Finalidade</label>
+            <select id="business_or_commercial" name="business_or_commercial" required>
+              <option value="b/c">Comercial/empresarial</option>
+              <option value="nob/c" selected>Pessoal — não comercial</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="Neg_ammortization">Permite amortização negativa?</label>
+            <select id="Neg_ammortization" name="Neg_ammortization" required>
+              <option value="neg_amm">Permite amortização negativa</option>
+              <option value="not_neg" selected>Não permite</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="interest_only">Paga apenas juros?</label>
+            <select id="interest_only" name="interest_only" required>
+              <option value="int_only">Apenas juros</option>
+              <option value="not_int" selected>Amortização normal</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="lump_sum_payment">Exige parcela única final?</label>
+            <select id="lump_sum_payment" name="lump_sum_payment" required>
+              <option value="lpsm">Exige pagamento único final</option>
+              <option value="not_lpsm" selected>Não exige</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="construction_type">Tipo de construção</label>
+            <select id="construction_type" name="construction_type" required>
+              <option value="sb" selected>Construído no local (site built)</option>
+              <option value="mh">Pré-fabricada (manufactured home)</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="occupancy_type">Tipo de ocupação</label>
+            <select id="occupancy_type" name="occupancy_type" required>
+              <option value="pr" selected>Residência principal</option>
+              <option value="sr">Residência secundária</option>
+              <option value="ir">Imóvel de investimento</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="Secured_by">Tipo de garantia real</label>
+            <select id="Secured_by" name="Secured_by" required>
+              <option value="home" selected>Imóvel residencial</option>
+              <option value="land">Terreno</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="total_units">Unidades no imóvel</label>
+            <select id="total_units" name="total_units" required>
+              <option value="1U" selected>1 unidade</option>
+              <option value="2U">2 unidades</option>
+              <option value="3U">3 unidades</option>
+              <option value="4U">4 unidades</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="credit_type">Bureau de crédito</label>
+            <select id="credit_type" name="credit_type" required>
+              <option value="EXP" selected>Experian (EXP)</option>
+              <option value="EQUI">Equifax (EQUI)</option>
+              <option value="CRIF">CRIF</option>
+              <option value="CIB">Credit Information Bureau (CIB)</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="co-applicant_credit_type">Bureau do co-requerente</label>
+            <select id="co-applicant_credit_type" name="co-applicant_credit_type" required>
+              <option value="CIB" selected>Credit Information Bureau (CIB)</option>
+              <option value="EXP">Experian (EXP)</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="age">Faixa etária do solicitante</label>
+            <select id="age" name="age" required>
+              <option value="<25">Menos de 25 anos</option>
+              <option value="25-34">25–34 anos</option>
+              <option value="35-44">35–44 anos</option>
+              <option value="45-54" selected>45–54 anos</option>
+              <option value="55-64">55–64 anos</option>
+              <option value="65-74">65–74 anos</option>
+              <option value=">74">Mais de 74 anos</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="submission_of_application">Forma de submissão</label>
+            <select id="submission_of_application" name="submission_of_application" required>
+              <option value="to_inst" selected>Submetido à instituição</option>
+              <option value="not_inst">Não submetido à instituição</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="Region">Região geográfica do imóvel</label>
+            <select id="Region" name="Region" required>
+              <option value="south" selected>Sul</option>
+              <option value="North">Norte</option>
+              <option value="central">Central</option>
+              <option value="North-East">Nordeste</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="Security_Type">Tipo de garantia</label>
+            <select id="Security_Type" name="Security_Type" required>
+              <option value="direct" selected>Garantia direta</option>
+              <option value="Indriect">Garantia indireta</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ================= Parâmetro de decisão ================= -->
+      <fieldset>
+        <h2 class="secao-titulo">Parâmetro de decisão</h2>
+        <div class="grid">
+          <div class="campo">
+            <label for="limiar">Limiar de classificação</label>
+            <input type="number" id="limiar" name="limiar" step="0.01" min="0" max="1" value="0.5" required
+                   placeholder="Entre 0 e 1 (padrão 0.5)" />
+            <small>Probabilidade a partir da qual o pedido é classificado como inadimplente</small>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="acoes">
+        <button type="submit" id="btn-enviar">Enviar</button>
+      </div>
+    </form>
+  </main>
+
+  <!-- ================= Modal de resultado ================= -->
+  <div class="modal-backdrop" id="modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+      <button class="modal-fechar" id="modal-x" aria-label="Fechar">&times;</button>
+      <h2 id="modal-titulo">Resultado</h2>
+      <div id="modal-corpo"></div>
+      <div class="modal-acoes">
+        <button type="button" id="modal-fechar">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

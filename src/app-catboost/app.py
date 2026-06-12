@@ -21,6 +21,7 @@ Para rodar:
     # depois mande um POST para http://127.0.0.1:8000/prever
 """
 
+from datetime import datetime
 from pathlib import Path
 import json
 import pickle
@@ -57,7 +58,9 @@ app = Flask(__name__)
 # "co-applicant_credit_type" tem hífen, então no JSON é enviada com esse nome
 # mesmo — aqui não precisamos de alias porque trabalhamos direto com o dict.
 # ---------------------------------------------------------------------------
-CAMPOS_NUMERICOS_INT = ["ID", "year", "Credit_Score"]
+# ID e year NÃO são preenchidos pelo cliente: o ID vai vazio e o year recebe
+# o ano atual (preenchidos no servidor, ver `validar_e_converter`).
+CAMPOS_NUMERICOS_INT = ["Credit_Score"]
 CAMPOS_NUMERICOS_FLOAT = ["loan_amount", "term", "income", "dtir1"]
 CAMPOS_TEXTO = [
     "loan_limit", "Gender", "approv_in_adv", "loan_type", "loan_purpose",
@@ -125,6 +128,10 @@ def validar_e_converter(dados):
             raise ValueError(f"Campo '{campo}' deve ser um número.")
     for campo in CAMPOS_TEXTO:
         convertido[campo] = str(dados[campo])
+
+    # Campos preenchidos pelo servidor (não vêm do formulário):
+    convertido["ID"] = ""                     # ID vai vazio
+    convertido["year"] = datetime.now().year  # ano atual (lib nativa)
     return convertido
 
 
@@ -136,6 +143,12 @@ def raiz():
     return jsonify(
         {"mensagem": "API de inadimplência no ar. Mande um POST para /prever."}
     )
+
+
+@app.get("/ui")
+def ui():
+    # Entrega a página web do formulário (mesma origem da API → sem CORS).
+    return app.send_static_file("index.html")
 
 
 @app.get("/health")
