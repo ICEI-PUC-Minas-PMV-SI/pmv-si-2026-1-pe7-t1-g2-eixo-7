@@ -1,7 +1,5 @@
 "use strict";
 
-// Campos que a API espera como número (o resto é enviado como string).
-// ID e year não vão no formulário: o servidor preenche (ID vazio, ano atual).
 const CAMPOS_NUMERICOS = [
   "Credit_Score",
   "loan_amount", "term", "income", "dtir1",
@@ -26,7 +24,6 @@ const modalCorpo = document.getElementById("modal-corpo");
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  // Validação nativa do navegador (todos os campos são required).
   if (!form.reportValidity()) {
     return;
   }
@@ -115,7 +112,6 @@ function fecharModal() {
 document.getElementById("modal-x").addEventListener("click", fecharModal);
 document.getElementById("modal-fechar").addEventListener("click", fecharModal);
 modal.addEventListener("click", (event) => {
-  // Fecha ao clicar no fundo escuro, mas não ao clicar dentro do modal.
   if (event.target === modal) {
     fecharModal();
   }
