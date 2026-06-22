@@ -6,7 +6,7 @@
 
 `SEMESTRE: 7º`
 
-Descrever resumidamente, em um ou dois parágrafos, o projeto que está sendo desenvolvido.
+O projeto desenvolvido tem como objetivo analisar uma base de dados histórica para identificar padrões de comportamento e encontrar um algoritmo adequado capaz de prever se um cliente será adimplente ou inadimplente. Essa abordagem busca automatizar a avaliação de risco, oferecendo suporte estratégico para a tomada de decisões em concessões financeiras. Para atingir esse propósito, o trabalho foi estruturado seguindo uma metodologia organizada em cinco etapas principais: a compreensão do problema de negócio, a preparação e limpeza dos dados, a análise exploratória para identificação de tendências, o treinamento dos modelos preditivos e a avaliação comparativa para a escolha da solução mais estável e eficiente.
 
 ## Integrantes
 
@@ -19,7 +19,7 @@ Descrever resumidamente, em um ou dois parágrafos, o projeto que está sendo de
 
 ## Orientador
 
-* Nome completo do professor 1
+* Neil Paiva Tizzo
 
 # Planejamento
 
@@ -34,7 +34,7 @@ Descrever resumidamente, em um ou dois parágrafos, o projeto que está sendo de
 ## Instruções de utilização
 
 Acesso em Produção (quando disponível)
-* URL: https://<seu-dominio>/...
+* URL: [https://<seu-dominio>/...](https://flask-catboost-b9fdd5gpaeche6f5.mexicocentral-01.azurewebsites.net/ui)
 * Status: online/homologação
 
 # Código
